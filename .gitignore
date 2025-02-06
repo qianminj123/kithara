@@ -1,0 +1,16 @@
+*.egg-info/
+*.pyc
+.DS_Store
+.ipynb_checkpoints
+events*
+**/__pycache__
+docs/build
+tmp/
+dist/
+*.pyc
+build/
+docs/bin/
+docs/lib/
+docs/lib64
+docs/pyvenv.cfg
+
