@@ -15,6 +15,9 @@ Supported TPUs
 
 Kithara supports all GCP generations and sizes of TPUs. For supported TPUs, see `Cloud TPU Pricing <https://cloud.google.com/tpu/pricing?hl=en>`_.
 
+TPU VM Image
+------------
+We recommend using the ``tpu-ubuntu2204-base image`` TPU VM image. 
 
 Requesting Capacity
 ----------------

@@ -5,6 +5,8 @@ Quick Start
 
 This guide demonstrates how to fine-tune a Gemma2 2B model using LoRA with a toy dataset.
 
+The script can also be found on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/quick_start.py>`_.
+
 
 Setup
 -----
@@ -33,7 +35,7 @@ Quick Usage
     )
 
 .. tip::
-    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the HuggignFace model, and set the ``HF_TOKEN`` environment variable.
+    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the HuggingFace model, and set the ``HF_TOKEN`` environment variable.
     
 2. Prepare Dataset::
 
@@ -105,8 +107,6 @@ Quick Usage
 
 Running This Example on Single Host
 ------------------------------------------------
-
-The script can also be found on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/quick_start.py>`_.
 
 Simple copy paste this script from the Github repo, and run it on your TPU VM::
 

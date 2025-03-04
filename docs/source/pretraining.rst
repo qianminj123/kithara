@@ -7,7 +7,8 @@ Continued Pre-training
 
 In this guide, we'll demonstrate how to continue pretraining the Gemma 2 model using a large Math Pretraining dataset. 
 
-This example runs on both single-host and multi-host environments.
+This example runs on both single-host and multi-host environments. You can also find this script on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/continued_pretraining_example.py>`_.  
+
 
 Let's Get Started! 🚀
 --------------------
@@ -59,7 +60,7 @@ Step 2: Create Dataloaders
 -----------------------------
 
 .. tip:: 
-    Sequence packing helps improve training efficiency by reducing padding. Learn about it `here <packing>`_.
+    Sequence packing helps improve training efficiency by reducing padding. Learn about it :doc:`here <packing>`.
 
 Create Kithara Dataset and Dataloader. Per-device batch size is set to 1 per device, but you can increase it if you have enough HBM memory.
 
@@ -92,7 +93,7 @@ Create Kithara Dataset and Dataloader. Per-device batch size is set to 1 per dev
 Step 3: Initialize Model and Optimizer
 ---------------------------------------
 
-You can use a larger model (e.g. ``hf://google/gemma-2-9b``, ``hf://google/gemma-2-27b``) if you are training on with multiple hosts and have enough memory.
+You can use a larger model (e.g. ``hf://google/gemma-2-9b``, ``hf://google/gemma-2-27b``) if you are training on multiple hosts and have enough memory.
 
 .. code-block:: python
 
@@ -168,7 +169,6 @@ Save the model in the HuggingFace format::
 
     model.save_in_hf_format("gs://my-bucket/models")
 
-You can also find this script on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/continued_pretraining_example.py>`_.  
 
 Notes
 -----

@@ -7,7 +7,8 @@ Supervised Fine-Tuning + LoRA
 
 In this guide, we're going to transform the powerful Gemma 2B model into your very own customized AI assistant. 
 
-This example runs on both single host and multi-host environments. 
+This example runs on both single host and multi-host environments. You can also find this script on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/sft_lora_example.py>`_.  
+
 
 Let's Get Started! 🎉
 --------------------
@@ -190,7 +191,6 @@ Example Output
     the next number is 5. The next number is 8, and the next number
     is 13.
 
-You can also find this script on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/sft_lora_example.py>`_.  
 
 Notes
 -----

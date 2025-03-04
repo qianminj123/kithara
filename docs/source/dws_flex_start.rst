@@ -76,7 +76,7 @@ Monitor the run time of Flex Start TPUs
 
 You can monitor the run time of Flex Start TPUs by checking the TPU's termination timestamp:
 
-1.  Get the details of your queued resource request using the steps in the previous section, :doc:`Get the status of a Flex Start request<get_status>`.
+1.  Get the details of your queued resource request using the steps in the previous section, :doc:`Get the status of a Flex Start request <get_status>`.
 2.  **If the queued resource is waiting for resources:** In the output, see the ``maxRunDuration`` field. 
     This field specifies how long the TPUs will run once they're created.
     **If the TPUs associated with the queued resource have been created:** In the output, see the
