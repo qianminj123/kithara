@@ -55,7 +55,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         model_name: str,
         seq_len: int = 2048,
         per_device_batch_size: int = 1,
-        precision: str = "mixed_float16",
+        precision: str = "mixed_bfloat16",
         scan_layers: bool = False,
         maxtext_config_args: Optional[dict] = None,
     ) -> "MaxTextModel":
@@ -67,7 +67,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
             per_device_batch_size (int, optional): Batch size per device.
                 Defaults to 1.
             precision (str, optional): Precision mode for computations.
-                Defaults to "mixed_float16".
+                Defaults to "mixed_bfloat16".
             scan_layers (bool, optional): Whether to use scan layers for memory efficiency.
                 Defaults to False.
             maxtext_config_args (Optional[dict], optional): Additional configuration arguments.
@@ -106,7 +106,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         preset_handle: str,
         seq_len: int = 2048,
         per_device_batch_size: int = 1,
-        precision: str = "mixed_float16",
+        precision: str = "mixed_bfloat16",
         scan_layers: bool = False,
         maxtext_config_args: Optional[dict] = None,
     ) -> "MaxTextModel":
@@ -120,7 +120,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
             seq_len (int): Maximum sequence length.
             per_device_batch_size (int): Batch size per device.
             precision (str, optional): Precision mode for computations.
-                Defaults to "mixed_float16".
+                Defaults to "mixed_bfloat16".
             scan_layers (bool, optional): Whether to use scan layers. Defaults to False.
             maxtext_config_args (Optional[dict], optional): Additional configuration arguments.
                 Defaults to None.

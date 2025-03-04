@@ -23,7 +23,7 @@ model = MaxTextModel.from_preset(
     seq_len=4096,
     per_device_batch_size=1,
     scan_layers=False, 
-    precision="mixed_float16"
+    precision="mixed_bfloat16"
 )
 
 

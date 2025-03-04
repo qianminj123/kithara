@@ -55,7 +55,7 @@ class KerasHubModel(Model):
         cls,
         preset_handle: str,
         lora_rank: Optional[int] = None,
-        precision: str = "mixed_float16",
+        precision: str = "mixed_bfloat16",
         sharding_strategy: Optional[ShardingStrategy] = None,
         **kwargs,
     ) -> "KerasHubModel":
@@ -69,7 +69,7 @@ class KerasHubModel(Model):
                 - A local directory path (e.g., `"./bert_base_en"`).
             lora_rank (Optional[int]): Rank for LoRA adaptation. If None, LoRA is disabled.
                 Defaults to None. When enabled, LoRA is applied to the `q_proj` and `v_proj` layers.
-            precision (str): Precision policy for the model. Defaults to "mixed_float16".
+            precision (str): Precision policy for the model. Defaults to "mixed_bfloat16".
                 Supported options include: "float32", "float16", "bfloat16", "mixed_float16",
                 and "mixed_bfloat16". Mixed precision policies load weights in float32 and cast
                 activations to the specified dtype.

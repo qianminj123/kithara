@@ -76,7 +76,7 @@ def test(model_id, weight_tol, logits_tol, top1_token_tol):
         seq_len=512,
         per_device_batch_size=1,
         scan_layers=True,
-        precision="mixed_float16",
+        precision="mixed_bfloat16",
     )
 
     # Save model

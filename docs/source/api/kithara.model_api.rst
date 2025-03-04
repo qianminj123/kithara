@@ -9,14 +9,14 @@ MaxTextModel
 from_random
 ^^^^^^^^^^
 
-.. py:classmethod:: MaxTextModel.from_random(model_name: str, seq_len: int = 2048, per_device_batch_size: int = 1, precision: str = "mixed_float16", scan_layers: bool = False, maxtext_config_args: Optional[dict] = None) -> "MaxTextModel"
+.. py:classmethod:: MaxTextModel.from_random(model_name: str, seq_len: int = 2048, per_device_batch_size: int = 1, precision: str = "mixed_bfloat16", scan_layers: bool = False, maxtext_config_args: Optional[dict] = None) -> "MaxTextModel"
 
    Create a randomly initialized MaxText model with the given configuration.
 
    :param model_name: Name of the MaxText model configuration to use. Supported: "default", "llama2-7b", "llama2-13b", "llama2-70b", "llama3-8b", "llama3-70b", "llama3.1-8b", "llama3.1-70b", "llama3.1-405b", "llama3.3-70b", "mistral-7b", "mixtral-8x7b", "mixtral-8x22b", "deepseek3-671b", "gemma-7b", "gemma-2b", "gemma2-2b", "gemma2-9b", "gemma2-27b", "gpt3-175b", "gpt3-22b", "gpt3-6b", "gpt3-52k"
    :param seq_len: Maximum sequence length (default: 2048)
    :param per_device_batch_size: Batch size per device (default: 1)
-   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weight in float32 and casts activations to the specified dtype. (default: "mixed_float16")
+   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weight in float32 and casts activations to the specified dtype. (default: "mixed_bfloat16")
    :param scan_layers: Whether to use scan layers for memory efficiency. Set to True for models <9B for performance gain. (default: False)
    :param maxtext_config_args: Additional MaxText configuration arguments (default: None)
    :return: A new instance of MaxTextModel with random initialization
@@ -35,7 +35,7 @@ from_random
 from_preset
 ^^^^^^^^^^
 
-.. py:classmethod:: MaxTextModel.from_preset(preset_handle: str, seq_len: int = 2048, per_device_batch_size: int = 1, precision: str = "mixed_float16", scan_layers: bool = False, maxtext_config_args: Optional[dict] = None) -> "MaxTextModel"
+.. py:classmethod:: MaxTextModel.from_preset(preset_handle: str, seq_len: int = 2048, per_device_batch_size: int = 1, precision: str = "mixed_bfloat16", scan_layers: bool = False, maxtext_config_args: Optional[dict] = None) -> "MaxTextModel"
 
    Create a MaxText model initialized with weights from HuggingFace Hub.
 
@@ -45,7 +45,7 @@ from_preset
                       - GCS HuggingFace checkpoint path (e.g. "gs://bucket_name/my_model/checkpoint")
    :param seq_len: Maximum sequence length (default: 2048)
    :param per_device_batch_size: Batch size per device (default: 1)
-   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weight in float32 and casts activations to the specified dtype. (default: "mixed_float16")
+   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weight in float32 and casts activations to the specified dtype. (default: "mixed_bfloat16")
    :param scan_layers: Whether to use scan layers. Set to True for models <9B for performance gain. (default: False)
    :param maxtext_config_args: Additional configuration arguments (default: None)
    :return: A new instance of MaxTextModel initialized with pretrained weights
@@ -124,7 +124,7 @@ KerasHubModel
 from_preset
 ^^^^^^^^^^
 
-.. py:classmethod:: KerasHubModel.from_preset(preset_handle: str, lora_rank: Optional[int] = None, precision: str = "mixed_float16", sharding_strategy: Optional[ShardingStrategy] = None, **kwargs) -> "KerasHubModel"
+.. py:classmethod:: KerasHubModel.from_preset(preset_handle: str, lora_rank: Optional[int] = None, precision: str = "mixed_bfloat16", sharding_strategy: Optional[ShardingStrategy] = None, **kwargs) -> "KerasHubModel"
 
    Create a KerasHub model initialized with weights from various sources, with optional LoRA adaptation.
 
@@ -134,7 +134,7 @@ from_preset
                       - A Hugging Face handle (e.g., "hf://user/bert_base_en")
                       - A local directory path (e.g., "./bert_base_en")
    :param lora_rank: Rank for LoRA adaptation. If None, LoRA is disabled. When enabled, LoRA is applied to the q_proj and v_proj layers. (default: None)
-   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weights in float32 and cast activations to the specified dtype. (default: "mixed_float16")
+   :param precision: Precision mode for computations. Supported policies include "float32", "float16", "bfloat16", "mixed_float16", and "mixed_bfloat16". Mixed precision policies load model weights in float32 and cast activations to the specified dtype. (default: "mixed_bfloat16")
    :param sharding_strategy: Strategy for distributing model parameters, optimizer states, and data tensors. If None, tensors will be sharded using FSDP. Use kithara.ShardingStrategy to configure custom sharding. (default: None)
    :return: A new instance of KerasHubModel initialized with the specified configuration
 

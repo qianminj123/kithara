@@ -96,7 +96,7 @@ class TestSavingModels(unittest.TestCase):
             seq_len=self.MAX_TARGET_LENGTH,
             per_device_batch_size=1,
             scan_layers=True,
-            precision="mixed_float16",
+            precision="mixed_bfloat16",
         )
 
         # Save model
