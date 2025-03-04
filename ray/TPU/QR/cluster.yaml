@@ -1,5 +1,5 @@
 # A unique identifier for the head node and workers of this cluster.
-cluster_name: wenxindong-ray-cluster-qr-v5 # MODIFY choose your cluster name
+cluster_name: wenxindong-qr-cluster-dws-4 # MODIFY choose your cluster name
 max_workers: 1
 available_node_types:
   # The ray head node is a CPU node
@@ -21,11 +21,25 @@ available_node_types:
             diskSizeGb: 50 # Increase this if you need more disk space
             # See https://cloud.google.com/compute/docs/images for more images
             sourceImage: projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts
+      
+      # Uncomment and modify the following if you want to use a custom VPC network
+      
+      # networkInterfaces:
+      #   - kind: compute#networkInterface
+      #     subnetwork: https://www.googleapis.com/compute/v1/projects/{{project_name}}/regions/{{zone}}/subnetworks/{{subnet_name}}
+      #     accessConfigs:
+      #       - kind: compute#accessConfig
+      #         networkTier: STANDARD
+      #         name: "External NAT"
+      #         type: "ONE_TO_ONE_NAT"
+      
+      # Additional supported GCP configs: https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
+
 provider: # MODIFY this section with your provider spec
   type: gcp
-  region: us-central2 #MODIFY this with your region
-  availability_zone: us-central2-b #MODIFY this with your availability_zone
-  project_id: mlperf-high-priority-project #MODIFY this with your project id
+  region: us-west4 #MODIFY this with your region
+  availability_zone: us-west4-a #MODIFY this with your availability_zone
+  project_id: tpu-prod-env-multipod #MODIFY this with your project id
 
 initialization_commands:
   # Don't stall on ubuntu graphic...
@@ -49,7 +63,7 @@ setup_commands:
 # Install dependecies needed only by the head node
 head_setup_commands:
   - pip install google-api-python-client
-  - pip install -U kithara[cpu]
+  - pip install -U kithara[cpu]==0.0.8
 
 # Specify the node type of the head node (as configured above).
 head_node_type: ray_head_default

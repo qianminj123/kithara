@@ -40,7 +40,7 @@ information on using pull requests.
 ### 1. Clone this repo on your TPU or GPU VM
 
 ```
-git clone --recursive https://github.com/wenxindongwork/keras-tuner-alpha.git
+git clone --recursive https://github.com/AI-Hypercomputer/kithara.git
 ```
 
 Make sure that you have cloned Kithara with the MaxText submodule. If already cloned, add the submodule using the following command.
@@ -93,7 +93,7 @@ It is important to set up development on MultiHost for implementing multihost fe
 1. Clone the repo on your local machine (i.e. laptop, CloudTop, or VM) and install the dependencies. 
 
    ```
-   git clone --recursive https://github.com/wenxindongwork/keras-tuner-alpha.git
+   git clone --recursive https://github.com/AI-Hypercomputer/kithara.git
    # Use conda or venv 
    conda create -n kithara_env python=3.11
    conda activate kithara_env
@@ -120,7 +120,7 @@ It is important to set up development on MultiHost for implementing multihost fe
    Now you should be ready to develop on multihost! Please test your set up by running an example in the `examples/multihost` folder. E.g.
 
    ```
-   kithara multihost "examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
+   python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
    ```
 
 # Releasing a New Version of Kithara (Googlers Only)
@@ -202,14 +202,14 @@ These instructions are for Googlers with access to Kithara's credentials via go/
 6. **Run Single-Host End-to-End Examples**: Clone the Kithara repository (using the correct branch) and execute the tests to make sure everything works as expected.
 
    ```
-   git clone -b BRANCH_NAME https://github.com/wenxindongwork/keras-tuner-alpha.git
+   git clone -b BRANCH_NAME https://github.com/AI-Hypercomputer/kithara.git
    ```
 
    Remove the
    `kithara` source code folder just in case.
 
    ```
-   cd keras-tuner-alpha
+   cd kithara
    rm -rf kithara
    ```
 
@@ -234,7 +234,7 @@ These instructions are for Googlers with access to Kithara's credentials via go/
 7. **Run Multi-Host End-to-End Examples**: Spin up a new Ray Cluster, updating the `cluster.yaml` file with the TestPyPI `kithara` dependency, and test running a multihost script.
 
    ```
-   kithara multihost "examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
+   python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
    ```
 
 8. **Upload to PyPI**: Once testing on TestPyPI is successful, you'll need to upload the wheel to the official PyPI repository. Don't forget to rerun `flit build --no-use-vcs` if you have made changes and need to rebuild the wheel. 

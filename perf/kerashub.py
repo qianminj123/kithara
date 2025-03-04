@@ -44,19 +44,19 @@ def run_benchmark():
     from kithara.callbacks import Profiler
 
     # Run parameters
-    BASE_OUTPUT_DIR = "GS_BUCKET"  # MODIFY with your GS bucket
+    BASE_OUTPUT_DIR = "gs://wenxindong-vm/jan24/perf"  # MODIFY with your GS bucket
     MODEL_HANDLE = "hf://google/gemma-2-9b"
     SEQ_LEN = 2048
     PER_DEVICE_BATCH_SIZE = 1
-
-    keras.config.enable_flash_attention()
     
     train_data, eval_data = example_datasets(option="finetune_toy")
 
     model = KerasHubModel.from_preset(
         MODEL_HANDLE,
         precision="mixed_bfloat16",
-        sharding_strategy=PredefinedShardingStrategy(parallelism="fsdp", model="gemma"),
+        sharding_strategy=PredefinedShardingStrategy(parallelism="fsdp", model="gemma2-9b"),
+        remat_mode=None,
+        flash_attention=True,
     )
 
     # Create Keras optimizer
@@ -69,7 +69,7 @@ def run_benchmark():
     train_ds = TextCompletionDataset(
         source = train_data, 
         tokenizer_handle=MODEL_HANDLE,
-        seq_len=SEQ_LEN,
+        max_seq_len=SEQ_LEN,
     )
 
     # Create Dataloader
@@ -113,7 +113,13 @@ if __name__ == "__main__":
         # Add the MaxText directory to the Python path
         maxtext_dir = "maxtext/MaxText"
         sys.path.append(maxtext_dir)
-
+        
+        import subprocess
+        subprocess.run(["pip install -e .[tpu] --no-deps"], shell=True)
+        subprocess.run(["pip uninstall keras keras-hub keras-nlp"], shell=True)
+        subprocess.run(["pip install keras-hub"], shell=True)
+        subprocess.run(["pip install --upgrade keras-nightly"], shell=True)
+        subprocess.run(["pip install git+https://github.com/divyashreepathihalli/keras-nlp.git@gemma_fs_bool"], shell=True)
         run_benchmark()
 
     ray.get([main.remote() for _ in range(num_tpu_hosts)])

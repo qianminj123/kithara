@@ -1,5 +1,5 @@
 # A unique identifier for the head node and workers of this cluster.
-cluster_name: my-tpu-cluster # MODIFY choose your cluster name
+cluster_name: wenxindong-official-pypi # MODIFY choose your cluster name
 max_workers: 1
 available_node_types:
   # The ray head node is a CPU node
@@ -21,6 +21,19 @@ available_node_types:
             diskSizeGb: 50 # Increase this if you need more disk space
             # See https://cloud.google.com/compute/docs/images for more images
             sourceImage: projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts
+      # Uncomment and modify the following if you want to use a custom VPC network
+      
+      # networkInterfaces:
+      #   - kind: compute#networkInterface
+      #     subnetwork: https://www.googleapis.com/compute/v1/projects/{{project_name}}/regions/{{zone}}/subnetworks/{{subnet_name}}
+      #     accessConfigs:
+      #       - kind: compute#accessConfig
+      #         networkTier: STANDARD
+      #         name: "External NAT"
+      #         type: "ONE_TO_ONE_NAT"
+      
+      # Additional supported GCP configs: https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
+
   # They ray worker nodes are TPU nodes
   ray_tpu:
     min_workers: 1
@@ -33,7 +46,7 @@ provider: # MODIFY this section with your provider spec
   type: gcp
   region: us-central2 #MODIFY this with your region
   availability_zone: us-central2-b #MODIFY this with your availability_zone
-  project_id: <YOUR_PROJECT_ID> #MODIFY this with your project id
+  project_id: mlperf-high-priority-project #MODIFY this with your project id
 
 initialization_commands:
   # Don't stall on ubuntu graphic...

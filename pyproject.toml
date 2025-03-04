@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "kithara"
 description = "LLM post-training library"
-version = "0.0.5"
+version = "0.0.8"
 readme = "README.md"
 license = { file = 'LICENSE' }
 authors = [{ name = 'Kithara Authors' }]
@@ -25,6 +25,8 @@ dependencies = [
         "peft",
         "hf_transfer",
         "tabulate",
+        "cryptography",
+        "huggingface_hub",
         # MaxText dependencies
         "aqtp",
         "grain-nightly",
@@ -48,24 +50,18 @@ cpu = ["jax[cpu]", "torch==2.4.0"]
 dev = [
         "twine",
         "flit",
-        "sphinx==7.1.2",
+        "sphinx==8.2.0",
         "sphinx-autobuild",
-        "sphinx-rtd-theme",
+        "sphinxawesome-theme>=5.3.2",
+        "sphinx_design",
 ]
-
-[project.scripts]
-kithara = "cli.main:main"
-
-[project.entry-points."kithara.commands"]
-multihost = "cli.multihost:main"
-
 
 [tool.flit.module]
 name = "kithara"
 
 [project.urls]
-Homepage = 'https://github.com/wenxindongwork/keras-tuner-alpha'
-Repository = 'https://github.com/wenxindongwork/keras-tuner-alpha'
+Homepage = 'https://github.com/AI-Hypercomputer/kithara'
+Repository = 'https://github.com/AI-Hypercomputer/kithara'
 Documentation = "https://kithara.readthedocs.io/en/latest/index.html"
 
 [tool.flit.sdist]
@@ -73,6 +69,3 @@ exclude = [
         "kithara/model/maxtext/maxtext/MaxText/test_assets/",
         "**/*.Dockerfile",
 ]
-
-[tool.flit.external-data]
-directory = "cli" 

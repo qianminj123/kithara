@@ -51,21 +51,19 @@ Ray is a great tool for running distributed TPU and GPU workloads. It offers a d
 
 3. Once all nodes in your ray cluster are set up and active, and you have launched the dashboard, you are ready to run multihost jobs.
 
-   First either clone the Kithara Github Repo or copy just the `examples` folder to your local machine.
-   Then, use the `kithara multihost` CLI to run the script on your Ray Cluster.
-
-   _Note: All files in your current directory will be uploaded to the Ray cluster. The best practice is to wrap the examples/ folder in an empty folder, and use the parent folder as the current directory._
+   First either clone the Kithara Github Repo or copy the necessary scripts to your local machine.
+   Then, use the `ray/submit_job.py` helper script to run the workload on your Ray Cluster.
 
    ```
-   mkdir ray_dir 
-   cp -r examples ray_dir 
-   cd ray_dir
-   kithara multihost examples/multihost/ray/TPU/sft_lora_example.py --hf-token your_token
+   python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
    ```
 
    You can early-stop your job using
 
-   `ray job stop ray_job_id`
+   ```
+   export RAY_ADDRESS="http://127.0.0.1:8265"
+   ray job stop ray_job_id
+   ```
 
 4. Once you are done with your ray cluster, tear it down
 
@@ -95,24 +93,35 @@ Ray is a great tool for running distributed TPU and GPU workloads. It offers a d
 5. Specify the following variables with your own TPU resources spec.
 
    ```
-    export ZONE="us-central1-a"
-    export QR_NAME="wenxindong-qr-v5litepod-32"
+    export ZONE="us-central2-b"
+    export QR_NAME="my_tpu_qr"
     export NODE_ID="v4-a"
     export PROJECT="gcp_project_name"
-    export TPU_TYPE="v5litepod-32"
+    export TPU_TYPE="v4-32"
     export RAY_CLUSTER_IP="your_cluster_ip"
    ```
 
 6. Create TPU VMs via QR.
 
    ```
-   gcloud alpha compute tpus queued-resources create $QR_NAME --node-id $NODE_ID --zone $ZONE  --project $PROJECT --accelerator-type $TPU_TYPE --runtime-version tpu-ubuntu2204-base --metadata-from-file='startup-script=ray/TPU/QR/qr_worker_startup_script.sh'
+   gcloud alpha compute tpus queued-resources create $QR_NAME --node-id $NODE_ID --zone $ZONE  --project $PROJECT --accelerator-type $TPU_TYPE --runtime-version tpu-ubuntu2204-base --metadata-from-file='startup-script=ray/TPU/QR/qr_worker_startup_script.sh' 
+   ```
+
+   If you are using DWS, use the following command: 
+
+   ```
+   gcloud alpha compute tpus queued-resources create $QR_NAME --node-id $NODE_ID --zone $ZONE  --project $PROJECT --accelerator-type $TPU_TYPE --runtime-version tpu-ubuntu2204-base --metadata="queued_resource_tier_b=true" --metadata-from-file='startup-script=ray/TPU/QR/qr_worker_startup_script.sh' 
    ```
 
 7. Monitor the status of the QR creation with the following command.
 
    ```
    gcloud compute tpus queued-resources describe $QR_NAME --project $PROJECT --zone $ZONE
+   ```
+   Once the status of the QR becomes `ACTIVE`, monitor the logs to make sure that the packages have finished installation. 
+
+   ```
+   gcloud alpha compute tpus queued-resources ssh $QR_NAME --project $PROJECT --zone $ZONE --command="sudo cat /var/log/syslog | grep startup-script" --worker=0 --node=all
    ```
 
 8. Once the QRs are ready, attach the TPU VMs to the Ray Cluster as worker nodes.
@@ -121,19 +130,24 @@ Ray is a great tool for running distributed TPU and GPU workloads. It offers a d
    gcloud alpha compute tpus queued-resources ssh $QR_NAME --project $PROJECT --zone $ZONE --command="ray start --address=$RAY_CLUSTER_IP:6379 --resources='{\"tpu_host\": 1}'" --worker=all --node=all
    ```
 
+   **Troubleshooting:** If you run into Python or Ray version inconsistencies, check the logs of the worker nodes, and see if anything went wrong in the installation process. 
+
+   ```
+   gcloud alpha compute tpus queued-resources ssh $QR_NAME --project $PROJECT --zone $ZONE --command="sudo cat /var/log/syslog | grep startup-script" --worker=all --node=all
+   ```
+
+   gcloud alpha compute tpus queued-resources ssh $QR_NAME --project $PROJECT --zone $ZONE --command="sudo lsof /dev/accel*" --worker=0 --node=all
+
+
 9. Now your Ray Cluster is ready, try out examples in the `examples/multihost/TPU` folder.
 
-   First either clone the Kithara Github Repo or copy just the `examples` folder to your local machine.
-   Then, use the `kithara multihost` CLI to run the script on your Ray Cluster.
-
-   _Note: All files in your current directory will be uploaded to the Ray cluster. The best practice is to wrap the examples/ folder in an empty folder, and use the parent folder as the current directory._
+   First either clone the Kithara Github Repo or copy the necessary scripts to your local machine.
+   Then, use the `ray/submit_job.py` helper script to run the workload on your Ray Cluster. 
 
    ```
-   mkdir ray_dir 
-   cp -r examples ray_dir 
-   cd ray_dir
-   kithara multihost examples/multihost/ray/TPU/sft_lora_example.py --hf-token your_token
+   python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/sft_lora_example.py" --hf-token your_token
    ```
+   
    You can early-stop your job using
 
    `ray job stop ray_job_id`
@@ -146,7 +160,7 @@ Ray is a great tool for running distributed TPU and GPU workloads. It offers a d
 
 11. Once you are done with your ray cluster, tear it down
 
-    `ray down ray/TPU/cluster.yaml`
+    `ray down ray/TPU/QR/cluster.yaml`
 
 ## TroubleShooting
 
