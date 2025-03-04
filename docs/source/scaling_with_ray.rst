@@ -82,6 +82,6 @@ Equivalently, use the Kithara `helper script <https://github.com/AI-Hypercompute
 
 Check out some multihost examples: 
 
-- `Multihost Quickstart Example <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/multihost/ray/TPU/quickstart.py>`_
+- `Multihost Quickstart Example <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/multihost/ray/TPU/quick_start.py>`_
 - `Multihost Continued Pretraining Example <https://github.com/AI-Hypercomputer/kithara/blob/main/ray/continued_pretraining_example.py>`_
 - `Multihost SFT+LoRA Example <https://github.com/AI-Hypercomputer/kithara/blob/main/ray/sft_lora_example.py>`_

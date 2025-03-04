@@ -110,7 +110,7 @@ The script can also be found on `Github <https://github.com/AI-Hypercomputer/kit
 
 Simple copy paste this script from the Github repo, and run it on your TPU VM::
 
-    python examples/singlehost/quickstart.py
+    python examples/singlehost/quick_start.py
 
 
 Running This Example on Multi-host
@@ -120,7 +120,7 @@ Kithara works with any accelerator orchestrator. However, if you are new to dist
 
 Once you set up a Ray cluster, clone the Github Repo, and run this example with your Ray Cluster::
 
-    python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/quickstart.py" --hf-token your_token
+    python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/quick_start.py" --hf-token your_token
 
 
 Next Steps
