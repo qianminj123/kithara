@@ -5,6 +5,7 @@ Dealing With Disks
 During the process of training and serving a LLM, you could easily run out of
 disk space on your VM or container. Potential large storage objects may
 include:
+
 * Base model (e.g. from Hugging Face)
 * Finetuning Dataset
 * Output checkpoints
@@ -16,6 +17,7 @@ disk space for your deployments.
 General Recommendations
 -----------------------
 We generally recommend the following best practices:
+
 * Download your model or dataset to a shared storage volume or bucket
   first, and mount this volume or bucket when you need it. This would
   save both disk space and time spent on downloading large files.
