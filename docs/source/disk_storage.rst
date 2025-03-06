@@ -33,9 +33,9 @@ which is similar to having a hard drive attached to your VM. These
 are a versatile solution and are ideal for multi-read, low latency
 workloads.
 
-Provisioning on TPU VMs: https://cloud.google.com/tpu/docs/setup-persistent-disk#:~:text=Attach%20a%20Persistent%20Disk%20when%20you%20create%20a%20TPU%20VM&text=To%20determine%20which%20VM%20image,you%20create%20a%20TPU%20VM.
+* Provisioning on TPU VMs: https://cloud.google.com/tpu/docs/setup-persistent-disk#:~:text=Attach%20a%20Persistent%20Disk%20when%20you%20create%20a%20TPU%20VM&text=To%20determine%20which%20VM%20image,you%20create%20a%20TPU%20VM.
 
-Provisioning on GKE: https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes
+* Provisioning on GKE: https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes
 
 
 Google Cloud Storage Buckets
@@ -66,13 +66,13 @@ bucket as if they were in a locally mounted volume. GCSFuse buckets can
 be read-only or read-write. You could even mount the same bucket on multiple
 workers.
 
-GCE VM: https://cloud.google.com/storage/docs/cloud-storage-fuse/overview
+* GCE VM: https://cloud.google.com/storage/docs/cloud-storage-fuse/overview
 
-GKE: https://cloud.google.com/kubernetes-engine/docs/how-to/cloud-storage-fuse-csi-driver-setup#enable
+* GKE: https://cloud.google.com/kubernetes-engine/docs/how-to/cloud-storage-fuse-csi-driver-setup#enable
 
-Sample Kubernetes yaml: https://github.com/AI-Hypercomputer/kithara/blob/main/ray/TPU/GKE/single-host.yaml
+  * Sample Kubernetes yaml: https://github.com/AI-Hypercomputer/kithara/blob/main/ray/TPU/GKE/single-host.yaml
 
-Note - running on GKE requires enabling workload identity first: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+  * Note - running on GKE requires enabling workload identity first: https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
 
 
 
