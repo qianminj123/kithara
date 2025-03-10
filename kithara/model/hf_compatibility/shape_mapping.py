@@ -92,7 +92,7 @@ def LLAMA31_HF_WEIGHTS_TO_SHAPE_MAPPING(config):
     mapping = {
         "model.embed_tokens.weight": [config["vocab_size"], config["hidden_size"]],
         "model.norm.weight": [config["hidden_size"]],
-        "lm_head.weight": [config["hidden_size"]],
+        "lm_head.weight": [config["vocab_size"], config["hidden_size"]]
     }
     for layer_idx in range(config["num_hidden_layers"]):
         layer_mapping = {
