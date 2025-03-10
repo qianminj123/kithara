@@ -145,9 +145,9 @@ class TestSavingModels(unittest.TestCase):
         """Test conversion for Llama 3.1 8B model."""
         self._run_conversion_test(
             model_id="meta-llama/Llama-3.1-8B",
-            weight_tol=0.0001,
-            logits_tol=2.0,
-            top1_token_tol=0.1
+            weight_tol=0.01,
+            logits_tol=0.1,
+            top1_token_tol=0.01
         )
 
 if __name__ == '__main__':

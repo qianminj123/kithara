@@ -493,7 +493,9 @@ def LLAMA31_MAXTEXT_TO_HF_PARAM_HOOK_FN(config, scan_layers=False, saving_to_hf=
             - Keys: MaxText parameter names (str)
             - Values: Either:
                 - callable: Single transformation function
-                - list[callable]: List of transformation functions to be applied in sequence
+                - list[callable]: List of transformation functions to be applied in sequence. 
+                    The order of the functions matters. The ordering specified is applied during 
+                    model loading, and the reverse order if applied during saving. 
 
     Transformation Details:
         The function handles reshaping and Transpose 2d:
@@ -521,29 +523,23 @@ def LLAMA31_MAXTEXT_TO_HF_PARAM_HOOK_FN(config, scan_layers=False, saving_to_hf=
             return from_hf()
 
     def adjust_rope(input_tensor, target_shape):
-        def unpermute_from_match_maxtext_rope(arr):
+        def from_hf(arr):
             """Convert from HF's concatenated layout to MaxText's interleaved layout"""
             half_dim = arr.shape[-1] // 2
             first_half = arr[..., :half_dim]
             second_half = arr[..., half_dim:]
             return jax.numpy.stack([first_half, second_half], axis=-1).reshape(arr.shape)
 
-        def permute_to_match_maxtext_rope(arr):
+        def to_hf(arr):
             """Convert from MaxText's interleaved layout to HF's concatenated layout"""
-            shape = arr.shape
-            arr = arr.reshape(shape[:-1] + (-1, 2))
-            return np.concatenate([arr[..., 0], arr[..., 1]], axis=-1)
-
-        def to_hf():
-            return permute_to_match_maxtext_rope(input_tensor)
-
-        def from_hf():
-            return unpermute_from_match_maxtext_rope(input_tensor)
+            evens = arr[..., ::2]
+            odds = arr[..., 1::2]
+            return jax.numpy.concatenate((evens, odds), axis=arr.ndim - 1)
 
         if saving_to_hf:
-            return to_hf()
+            return to_hf(input_tensor)
         else:
-            return from_hf()
+            return from_hf(input_tensor)
 
         
     def reshape_kernel(input_tensor, target_shape):
