@@ -1,3 +1,6 @@
 [submodule "kithara/model/maxtext/maxtext"]
 	path = kithara/model/maxtext/maxtext
 	url = https://github.com/google/maxtext
+[submodule "kithara/model/maxtext/JetStream"]
+	path = kithara/model/maxtext/JetStream
+	url = https://github.com/AI-Hypercomputer/JetStream.git

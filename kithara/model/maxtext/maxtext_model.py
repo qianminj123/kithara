@@ -48,7 +48,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         stop at specific token IDs.
     save_in_hf_format: Save the MaxText model in HuggingFace format.
     """
-
+    
     @classmethod
     def from_random(
         cls,
@@ -82,7 +82,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         weight_dtype = cls._weight_dtype(precision)
         activation_dtype = cls._activation_dtype(precision)
 
-        sharding_strategy, model = cls.initialize_random_maxtext_model(
+        maxtext_config, sharding_strategy, model = cls.initialize_random_maxtext_model(
             model_name,
             seq_len,
             per_device_batch_size,
@@ -98,6 +98,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
             model_name=model_name,
             precision=precision,
             scan_layers=scan_layers,
+            maxtext_config = maxtext_config,
         )
 
     @classmethod
@@ -136,7 +137,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         activation_dtype = cls._activation_dtype(precision)
 
         model_name = get_model_name_from_preset_handle(preset_handle)
-        sharding_strategy, model = cls.initialize_random_maxtext_model(
+        maxtext_config, sharding_strategy, model = cls.initialize_random_maxtext_model(
             model_name,
             seq_len,
             per_device_batch_size,
@@ -153,6 +154,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
             model_name=model_name,
             precision=precision,
             scan_layers=scan_layers,
+            maxtext_config = maxtext_config
         )
 
     def _convert_text_input_to_model_input(

@@ -99,6 +99,7 @@ class Model(ABC, ModelValidationMixin):
         precision: str = "mixed_bfloat16",
         scan_layers: bool = False,
         lora_rank: int = None,
+        maxtext_config: dict = None
     ):
 
         self.sharding_strategy = sharding_strategy
@@ -109,6 +110,7 @@ class Model(ABC, ModelValidationMixin):
         self.lora_rank = lora_rank
         self.weight_dtype = self._weight_dtype(precision)
         self.activation_dtype = self._activation_dtype(precision)
+        self.maxtext_config = maxtext_config
         # Tensorboard requires `model.optimizer`.
         # This will be automatically set during training.
         self._optimizer = None
