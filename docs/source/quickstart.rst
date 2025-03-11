@@ -7,6 +7,7 @@ This guide demonstrates how to fine-tune a Gemma2 2B model using LoRA with a toy
 
 The script can also be found on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/quick_start.py>`_.
 
+Prefer running in Colab? Check out the `this Colab Notebook instead <https://colab.sandbox.google.com/github/AI-Hypercomputer/kithara/blob/main/examples/colab/SFT_with_LoRA_Gemma2-2b.ipynb>`_.
 
 Setup
 -----
