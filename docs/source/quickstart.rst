@@ -55,13 +55,13 @@ Quick Usage
         train_ds,
         tokenizer_handle="hf://google/gemma-2-2b",
         max_seq_len=4096,
-    ).to_packed_dataset()
+    )
     
     eval_dataset = SFTDataset(
         eval_ds,
         tokenizer_handle="hf://google/gemma-2-2b",
         max_seq_len=4096,
-    ).to_packed_dataset()
+    )
     
     optimizer = keras.optimizers.AdamW(
         learning_rate=2e-4,
