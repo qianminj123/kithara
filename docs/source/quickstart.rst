@@ -10,7 +10,10 @@ The script can also be found on `Github <https://github.com/AI-Hypercomputer/kit
 
 Setup
 -----
-Import required packages::
+Log into HuggingFace and import required packages::
+
+    from huggingface_hub import login
+    login(token="your_hf_token", add_to_git_credential=False)
 
     import os
     os.environ["KERAS_BACKEND"] = "jax"
@@ -23,6 +26,9 @@ Import required packages::
         SFTDataset,
     )
 
+.. tip::
+    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the Gemma2 HuggingFace model which will be used in this example.
+
 Quick Usage
 ----------
 
@@ -33,9 +39,6 @@ Quick Usage
         precision="mixed_bfloat16",
         lora_rank=4,
     )
-
-.. tip::
-    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the HuggingFace model, and set the ``HF_TOKEN`` environment variable.
     
 2. Prepare Dataset::
 

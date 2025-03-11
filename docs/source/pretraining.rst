@@ -168,6 +168,8 @@ Step 7: Save Model
 Save the model in the HuggingFace format::
 
     model.save_in_hf_format("gs://my-bucket/models")
+    # Or, if you prefer saving to HuggingFace Hub 
+    # model.save_in_hf_format("hf://my-hf-id/repo-name")
 
 
 Notes

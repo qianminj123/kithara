@@ -1,18 +1,18 @@
 """
- Copyright 2025 Google LLC
+Copyright 2025 Google LLC
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-      https://www.apache.org/licenses/LICENSE-2.0
+     https://www.apache.org/licenses/LICENSE-2.0
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- """
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 """
 Utilities to convert Kithara model weights to HuggingFace format.
@@ -42,6 +42,8 @@ from safetensors.torch import save_file
 from concurrent.futures import ThreadPoolExecutor
 from peft import LoraConfig, PeftConfig
 from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
+from huggingface_hub import HfApi, repo_exists
+
 
 def apply_hook_fns(weight, target_shape, hook_fns):
     if hook_fns is None:
@@ -88,7 +90,7 @@ def process_weight(variable, mappings, debug=False):
     variable_path = variable.path
     if variable.path.startswith("max_text_layer"):
         variable_path = variable.path.split("/")[-1]
-    
+
     hf_paths = mappings["param_mapping"][variable_path]
     if isinstance(hf_paths, str):
         hf_paths = [hf_paths]
@@ -127,6 +129,12 @@ def save_lora_files(
     if lora_config == None:
         print("WARNING: There is no LoRA adapter to be saved. ")
         return
+
+    if output_dir.startswith("hf://"):
+        create_huggingface_hub_repo_if_not_exist(
+            repo_id=output_dir.lstrip("hf://"), repo_type="model"
+        )
+
     local_dir = _get_local_directory(output_dir)
     # Save adapter_config.json
     save_peft_config_file(lora_config, local_dir, output_dir)
@@ -136,9 +144,36 @@ def save_lora_files(
     )
 
 
+def create_huggingface_hub_repo_if_not_exist(repo_id, repo_type):
+    if not repo_exists(repo_id, repo_type=repo_type):
+        api = HfApi()
+        api.create_repo(
+            repo_id=repo_id,
+            repo_type=repo_type,
+            exist_ok=True,
+            private=True,
+        )
+        print(f"\n Created new HuggingFace Hub {repo_type} repo: {repo_id}.")
+
+
+def copy_local_file_to_huggingface_hub(local_path, file_name, repo_id, repo_type):
+    api = HfApi()
+    api.upload_file(
+        path_or_fileobj=local_path,
+        path_in_repo=file_name,
+        repo_id=repo_id,
+        repo_type=repo_type,
+    )
+
+
 def save_model_files(weight_arrays: Dict, config, output_dir: str, parallel_threads=8):
     """Saves model files (config and weights) to the specified directory."""
-    start_time = time.time()
+
+    if output_dir.startswith("hf://"):
+        create_huggingface_hub_repo_if_not_exist(
+            repo_id=output_dir.lstrip("hf://"), repo_type="model"
+        )
+
     print(f"\n-> Saving weights to {output_dir}...")
 
     local_dir = _get_local_directory(output_dir)
@@ -151,11 +186,10 @@ def save_model_files(weight_arrays: Dict, config, output_dir: str, parallel_thre
     save_weight_files(shards, index, local_dir, output_dir, parallel_threads)
 
 
-
 def _get_local_directory(output_dir: str) -> str:
     """Determines the local directory for saving files."""
     local_dir = output_dir
-    if local_dir.startswith("gs://"):
+    if local_dir.startswith("gs://") or local_dir.startswith("hf://"):
         local_dir = os.path.join(find_cache_root_dir(), "temp_ckpt")
     os.makedirs(local_dir, exist_ok=True)
     return local_dir
@@ -173,6 +207,13 @@ def save_index_file(index: dict, local_dir: str, output_dir: str, file_name: str
                 os.path.join(output_dir, file_name),
                 remove_local_file_after_upload=True,
             )
+        elif output_dir.startswith("hf://"):
+            copy_local_file_to_huggingface_hub(
+                local_path=local_path,
+                file_name=file_name,
+                repo_id=output_dir.lstrip("hf://"),
+                repo_type="model",
+            )
 
 
 def save_config_file(config, local_dir: str, output_dir: str, file_name: str):
@@ -187,6 +228,13 @@ def save_config_file(config, local_dir: str, output_dir: str, file_name: str):
                 os.path.join(output_dir, file_name),
                 remove_local_file_after_upload=True,
             )
+        elif output_dir.startswith("hf://"):
+            copy_local_file_to_huggingface_hub(
+                local_path=local_path,
+                file_name=file_name,
+                repo_id=output_dir.lstrip("hf://"),
+                repo_type="model",
+            )
 
 
 def save_peft_config_file(config: PeftConfig, local_dir: str, output_dir: str):
@@ -200,6 +248,13 @@ def save_peft_config_file(config: PeftConfig, local_dir: str, output_dir: str):
                 os.path.join(output_dir, SAFE_TENSORS_PEFT_CONFIG_FILE),
                 remove_local_file_after_upload=True,
             )
+        elif output_dir.startswith("hf://"):
+            copy_local_file_to_huggingface_hub(
+                local_path=local_path,
+                file_name=SAFE_TENSORS_PEFT_CONFIG_FILE,
+                repo_id=output_dir.lstrip("hf://"),
+                repo_type="model",
+            )
 
 
 def save_safetensor_file(state_dict, local_dir, output_dir, file_name):
@@ -212,6 +267,13 @@ def save_safetensor_file(state_dict, local_dir, output_dir, file_name):
             cloud_path = os.path.join(output_dir, file_name)
             upload_file_to_gcs(
                 local_path, cloud_path, remove_local_file_after_upload=True
+            )
+        elif output_dir.startswith("hf://"):
+            copy_local_file_to_huggingface_hub(
+                local_path=local_path,
+                file_name=file_name,
+                repo_id=output_dir.lstrip("hf://"),
+                repo_type="model",
             )
 
 
