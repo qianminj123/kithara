@@ -24,12 +24,26 @@ os.environ["JAX_PLATFORMS"] = ""
 
 from pathlib import Path
 import subprocess
-from subprocess import DEVNULL
 import importlib.metadata
 import sys
+import warnings
 
-import time
+def check_python_version():
+    """
+    Check if Python version is 3.11 or above, and issue a warning if it's not.
+    """
+    python_version = sys.version_info
+    
+    if python_version.major < 3 or (python_version.major == 3 and python_version.minor < 11):
+        warning_message = (
+            f"Warning: Your current Python version is {python_version.major}.{python_version.minor}. "
+            "Kithara requires Python 3.11 or above."
+        )
+        warnings.warn(warning_message, RuntimeWarning)        
+        return False
+    return True
 
+check_python_version()
 
 def _install_maxtext():
     try:
