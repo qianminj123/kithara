@@ -156,7 +156,7 @@ def create_huggingface_hub_repo_if_not_exist(repo_id, repo_type):
         print(f"\n Created new HuggingFace Hub {repo_type} repo: {repo_id}.")
 
 
-def copy_local_file_to_huggingface_hub(local_path, file_name, repo_id, repo_type):
+def upload_file_to_huggingface_hub(local_path, file_name, repo_id, repo_type):
     api = HfApi()
     api.upload_file(
         path_or_fileobj=local_path,
@@ -208,7 +208,7 @@ def save_index_file(index: dict, local_dir: str, output_dir: str, file_name: str
                 remove_local_file_after_upload=True,
             )
         elif output_dir.startswith("hf://"):
-            copy_local_file_to_huggingface_hub(
+            upload_file_to_huggingface_hub(
                 local_path=local_path,
                 file_name=file_name,
                 repo_id=output_dir.lstrip("hf://"),
@@ -229,7 +229,7 @@ def save_config_file(config, local_dir: str, output_dir: str, file_name: str):
                 remove_local_file_after_upload=True,
             )
         elif output_dir.startswith("hf://"):
-            copy_local_file_to_huggingface_hub(
+            upload_file_to_huggingface_hub(
                 local_path=local_path,
                 file_name=file_name,
                 repo_id=output_dir.lstrip("hf://"),
@@ -249,7 +249,7 @@ def save_peft_config_file(config: PeftConfig, local_dir: str, output_dir: str):
                 remove_local_file_after_upload=True,
             )
         elif output_dir.startswith("hf://"):
-            copy_local_file_to_huggingface_hub(
+            upload_file_to_huggingface_hub(
                 local_path=local_path,
                 file_name=SAFE_TENSORS_PEFT_CONFIG_FILE,
                 repo_id=output_dir.lstrip("hf://"),
@@ -269,7 +269,7 @@ def save_safetensor_file(state_dict, local_dir, output_dir, file_name):
                 local_path, cloud_path, remove_local_file_after_upload=True
             )
         elif output_dir.startswith("hf://"):
-            copy_local_file_to_huggingface_hub(
+            upload_file_to_huggingface_hub(
                 local_path=local_path,
                 file_name=file_name,
                 repo_id=output_dir.lstrip("hf://"),
