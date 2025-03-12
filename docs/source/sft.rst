@@ -172,7 +172,7 @@ Step 6: Save Model
 Save the model in the Hugging Face format::
 
     model.save_in_hf_format(
-        "model_output/", # You can also save the model to a Google Cloud Storage bucket
+        "model_output/", # You can also save the model to Google Cloud Storage, or directly to HuggingFace Hub
         only_save_adapters=True, # You can also save the base model, or merge the base model with the adapters
         save_adapters_separately=True
     )

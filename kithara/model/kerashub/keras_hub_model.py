@@ -151,8 +151,10 @@ class KerasHubModel(Model):
 
         Args:
             output_dir (str): Directory path where the model should be saved.
-                Directory could be local or a Google cloud storage path, and will be created if
-                it doesn't exist.
+                Directory could be a local folder (e.g. "foldername/"), 
+                HuggingFaceHub repo (e.g. "hf://your_hf_id/repo_name") or a 
+                Google cloud storage path (e.g. "gs://your_bucket/folder_name), 
+                and will be created if it doesn't exist. 
             dtype (str, optional): Data type for saved weights. Defaults to "auto".
             only_save_adapters (bool): If set to True, only adapter weights will be saved. If
                 set to False, both base model weights and adapter weights will be saved. Default

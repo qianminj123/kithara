@@ -14,6 +14,6 @@ We support all safetensor formatted models on `HuggingFace Hub <https://huggingf
    * - Gemma 2
      - 2B, 9B, 27B
      - google/gemma-2-2b
-   * - Llama 3
+   * - Llama 3.1
      - 8B, 27B, 405B
      - meta-llama/Llama-3.1-8B
