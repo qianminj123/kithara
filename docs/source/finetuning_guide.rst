@@ -40,7 +40,7 @@ Quick tips:
 - Always start model handles with ``hf://`` when loading from HuggingFace - so we know you are not loading from local directory 😀
 - The default precision ``mixed_bfloat16`` is your friend - it's memory-friendly! It loads model weights in full precision and casts activations to bfloat16.
 - Check out our :doc:`model garden <models>` for supported architectures
-- Want to save your model? Simply do ``model.save_in_hf_format(local_dir_or_gs_bucket_or_hf_hub)``
+- Want to save your model? Simply do ``model.save_in_hf_format(destination)`` to either save it locally, to GCS, or to HuggingFace.
 - Check out :doc:`Model API <api/kithara.model_api>` documentation
 
 2. Prepare Your Data

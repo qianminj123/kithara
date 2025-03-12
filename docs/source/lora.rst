@@ -35,7 +35,7 @@ You have three options for saving models trained with LoRA:
 Since the base model is left unchanged, you can save just the LoRA Adapters::
 
     model.save_in_hf_format(
-        local_dir_or_gs_bucket_or_hf_hub,
+        destination,
         only_save_adapters=True
     )
 
@@ -44,7 +44,7 @@ Since the base model is left unchanged, you can save just the LoRA Adapters::
 In case you want to save the base model as well. ::
 
     model.save_in_hf_format(
-        local_dir_or_gs_bucket_or_hf_hub,
+        destination,
         only_save_adapters=False,
         save_adapters_separately=True
     )
@@ -54,7 +54,7 @@ In case you want to save the base model as well. ::
 Creates a single model combining base weights and adaptations::
 
     model.save_in_hf_format(
-        local_dir_or_gs_bucket_or_hf_hub,
+        destination,
         save_adapters_separately=False
     )
 
