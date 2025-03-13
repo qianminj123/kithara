@@ -152,7 +152,7 @@ Get Started
    📈 Scaling up with Ray <scaling_with_ray>
    🏁 Serve with vLLM <vllm>
    💡 Troubleshooting <troubleshooting>
-   💌 Support and Community <support>
+   💌 Help and Feedback <help_and_feedback>
 
 .. toctree::
    :caption: Basics

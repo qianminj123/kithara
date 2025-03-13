@@ -8,40 +8,44 @@ Ready to fine-tune with your own data? Let's break it down into simple steps.
 1. Pick Your Model 
 ------------------
 
-Kithara got two options for you:
+Kithara uses two model gardens - MaxText and Keras Hub.
 
 MaxText
 ~~~~~~~
 
-For when you want to do full-parameter fine-tuning::
 
-    from kithara import MaxTextModel
+MaxText is recommended for full-parameter fine-tuning.
+
+.. parsed-literal::
+
+        from kithara import MaxTextModel
     
-    model = MaxTextModel.from_preset(
-        "hf://google/gemma-2-2b",
-        seq_len=8192, # Seq len and batch size need to be specified up front
-        per_device_batch_size=1
-    )
+        model = **MaxTextModel**.from_preset(
+            "hf://google/gemma-2-2b",
+            seq_len=8192, # Seq len and batch size need to be specified up front
+            per_device_batch_size=1
+       )
 
 KerasHub
 ~~~~~~~~
 
-For when you want to fine-tune with LoRA::
+KerasHub is recommended for parameter efficient fine-tuning (LoRA).
+
+.. parsed-literal::
 
     from kithara import KerasHubModel
     
-    model = KerasHubModel.from_preset(
+    model = **KerasHubModel**.from_preset(
         "hf://google/gemma-2-2b",
         lora_rank=16  # Applied to q_proj and v_proj
     )
 
-Quick tips:
-
-- Always start model handles with ``hf://`` when loading from HuggingFace - so we know you are not loading from local directory 😀
-- The default precision ``mixed_bfloat16`` is your friend - it's memory-friendly! It loads model weights in full precision and casts activations to bfloat16.
-- Check out our :doc:`model garden <models>` for supported architectures
-- Want to save your model? Simply do ``model.save_in_hf_format(destination)`` to either save it locally, to GCS, or to HuggingFace.
-- Check out :doc:`Model API <api/kithara.model_api>` documentation
+.. tip::
+        - Always start model handles with ``hf://`` when loading from HuggingFace - so we know you are not loading from local directory 😀
+        - The default precision ``mixed_bfloat16`` is your friend - it's memory-friendly! It loads model weights in full precision and casts activations to bfloat16.
+        - Check out our :doc:`model garden <models>` for supported architectures
+        - Want to save your model? Simply do ``model.save_in_hf_format(destination)`` to either save it locally, to GCS, or to HuggingFace.
+        - Check out :doc:`Model API <api/kithara.model_api>` documentation
 
 2. Prepare Your Data
 --------------------
