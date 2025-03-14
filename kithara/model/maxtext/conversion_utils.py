@@ -164,10 +164,7 @@ class MaxTextConversionMixin:
             argv += [f"model_name={model_name}"]
         if maxtext_config is not None:
             argv += maxtext_config.split(" ")
-        # pyconfig.initialize must be called before
-        # any JAX computations are executed.
-        pyconfig.initialize(argv)
-        config = pyconfig.config
+        config = pyconfig.initialize(argv)
         return config
 
     @staticmethod
@@ -178,6 +175,7 @@ class MaxTextConversionMixin:
         weight_dtype: str,
         activation_dtype: str,
         scan_layers: bool,
+        max_prefill_predict_length: int,
         maxtext_config_args: Optional[str] = None,
     ) -> tuple[ShardingStrategy, keras.Model]:
         """Initialize a random MaxText model with the input configuration.
@@ -221,11 +219,10 @@ class MaxTextConversionMixin:
         maxtext_config_args["per_device_batch_size"] = per_device_batch_size
         assert "max_target_length" not in maxtext_config_args
         maxtext_config_args["max_target_length"] = seq_len
+        assert "max_prefill_predict_length" not in maxtext_config_args
+        maxtext_config_args["max_prefill_predict_length"] = max_prefill_predict_length
         if "enable_checkpointing" not in maxtext_config_args:
             maxtext_config_args["enable_checkpointing"] = False
-        # DO NOT SUBMIT
-        if "max_prefill_predict_length" not in maxtext_config_args:
-            maxtext_config_args["max_prefill_predict_length"] = 1024
         
         maxtext_config_args = " ".join(
             [f"{key}={value}" for key, value in maxtext_config_args.items()]

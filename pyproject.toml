@@ -41,6 +41,7 @@ dependencies = [
         "cloud-tpu-diagnostics",
         "ml-goodput-measurement",
         "google-cloud-monitoring",
+        "omegaconf",
 ]
 
 [project.optional-dependencies]

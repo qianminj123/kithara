@@ -14,7 +14,7 @@
  limitations under the License.
  """
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Union, List
 import numpy as np
 from keras_hub.models import CausalLM
 from kithara.distributed.sharding import ShardingStrategy, PredefinedShardingStrategy
@@ -110,31 +110,112 @@ class KerasHubModel(Model):
             lora_rank=lora_rank,
         )
 
+    def _pad_tokens_to_max_length(self, tokens, max_length):
+        """
+        Pad each sequence in the list of token sequences to max_length.
+        
+        Args:
+            tokens: List of numpy arrays, where each array is a sequence of token IDs
+            max_length: The target length to pad sequences to
+            
+        Returns:
+            Dict containing padded token_ids and corresponding padding_mask
+        """
+        # Initialize arrays for padded tokens and attention masks
+        batch_size = len(tokens)
+        padded_tokens = np.zeros((batch_size, max_length), dtype=np.int64)
+        padding_mask = np.zeros((batch_size, max_length), dtype=np.int64)
+        
+        # Fill the arrays with the tokens and create corresponding masks
+        for i, seq in enumerate(tokens):
+            seq_len = min(len(seq), max_length)
+            padded_tokens[i, :seq_len] = seq[:seq_len]
+            padding_mask[i, :seq_len] = 1
+        
+        return {
+            "token_ids": padded_tokens,
+            "padding_mask": padding_mask,
+        }
+    
+    def _convert_text_input_to_model_input(
+        self,
+        prompts: Union[str | List[str]],
+        tokenizer:"AutoTokenizer",
+        max_length: int = 100,
+    ):
+        assert (
+            max_length is not None
+        ), "max_length must be provided to generate() when inputs are strings."
+
+        tokens: Dict[str, np.ndarray] = tokenizer(
+            prompts,
+            max_length=max_length,
+            padding="max_length",
+            padding_side="right",
+            truncation=True,
+            return_tensors="np",
+        )
+        input_ids = tokens["input_ids"]
+        attention_mask = tokens["attention_mask"]
+        return {
+            "token_ids": input_ids,
+            "padding_mask": attention_mask,
+        }
+
     def _generate(
         self,
-        model_input,
-        stop_token_ids=None,
-        strip_prompt=False,
+        inputs: Union[List[str], List[np.ndarray]],
+        max_length: int = None,
+        stop_token_ids: Optional[List] = None,
+        strip_prompt: str = False,
+        tokenizer: Optional["AutoTokenizer"] = None,
         **kwargs,
-    ) -> Dict[str, np.ndarray]:
-        """Fall back to https://github.com/keras-team/keras-hub/blob/master/keras_hub/src/models/causal_lm.py"""
+    ) -> List[List[int]]:
+        """Generate tokens using the model. This function falls back to KerasHub model's
+        native generation function: 
+        https://github.com/keras-team/keras-hub/blob/master/keras_hub/src/models/causal_lm.py
+
+        Args:
+            inputs (list[str]|list[np.ndarray]): A list of strings, or a list 
+                of numpy arrays containing integer token ids.
+            max_length (int, optional): Maximum total sequence length
+                (prompt + generated tokens). 
+            stop_token_ids (List[int], optional): List of token IDs that stop
+                generation. 
+            strip_prompt (bool, optional): If True, returns only the generated
+                tokens without the input prompt tokens. If False, returns all
+                tokens, including the prompt tokens. Defaults to False.
+            tokenizer (AutoTokenizer, optional): A HuggingFace AutoTokenizer instance. 
+                This is guaranteed to be provided when inputs are strings. 
+
+        Returns:
+            list[np.ndarray]: Generated token IDs (numpy.ndarray) for each prompt        
+        """
+
+        if isinstance(inputs[0], str):
+            inputs = self._convert_text_input_to_model_input(
+                inputs, max_length, tokenizer
+            )
+        else:
+            inputs = self._pad_tokens_to_max_length(inputs, max_length)
 
         # stop_token_ids cannot be an empty list
         stop_token_ids = stop_token_ids if stop_token_ids else None
 
         tokens = self.model.generate(
-            model_input,
+            inputs,
             stop_token_ids=stop_token_ids,
             strip_prompt=strip_prompt,
         )
 
         # Return output but first stripped prompt
         is_token = tokens["padding_mask"] == True
-        B, _ = tokens["token_ids"].shape
-        return {
-            "token_ids": tokens["token_ids"][is_token][None, :].reshape(B, -1),
-            "padding_mask": tokens["padding_mask"][is_token][None, :].reshape(B, -1),
-        }
+        
+        if strip_prompt:
+            return [sample_tokens["token_ids"][is_token].tolist() for sample_tokens in tokens]
+        else:
+            return [sample_tokens["token_ids"].tolist() for sample_tokens in tokens]
+            
 
     def save_in_hf_format(
         self,

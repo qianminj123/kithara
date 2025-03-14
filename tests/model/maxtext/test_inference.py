@@ -31,17 +31,6 @@ import os
 
 @unittest.skipIf(int(os.getenv('RUN_LIGHT_TESTS_ONLY', 0)) == 1, "Heavy Test")
 class TestModelGeneration(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.model = MaxTextModel.from_random("gemma2-2b", seq_len=100)
-        cls.model_input = {
-            "tokens": np.array([[i for i in range(100)]] * jax.device_count()),
-            "positions": np.array([[i for i in range(100)]] * jax.device_count()),
-            "segment_ids": np.array([[1 for _ in range(100)]] * jax.device_count()),
-        }
-
-        cls.tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-2b")
-        cls.test_prompt = "hello world"
 
     def setUp(self):
         print(f"\nStarting test: {self._testMethodName}")
@@ -51,111 +40,131 @@ class TestModelGeneration(unittest.TestCase):
         duration = time.time() - self.start_time
         print(f"Completed test: {self._testMethodName} in {duration:.2f} seconds\n")
 
-    @timeout(30)
     def test_generate_without_tokenizer(self):
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=100)
         with self.assertRaises(AssertionError):
-            self.model.generate(self.test_prompt)
+            model.generate("hello world")
 
         with self.assertRaises(AssertionError):
-            self.model.generate(self.model_input, return_decoded=True, max_length=-1)
+            model.generate([np.array([1,2,3])], return_decoded=True, max_length=-1)
 
     @timeout(200)
     def test_generate_with_string_input_decoded(self):
-        pred = self.model.generate(
-            self.test_prompt,
-            max_length=5,
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=True,
-        )
-        self.assertIsInstance(pred[0], str)
-        self.assertLess(len(pred[0].split(" ")), 10)
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=100)
+
+        with self.subTest("Testing not stripping prompt"):
+            pred = model.generate(
+                "what is your name?",
+                max_length=100,
+                tokenizer_handle="hf://google/gemma-2-2b",
+                return_decoded=True,
+            )
+            self.assertIsInstance(pred[0], str)
+            self.assertLess(len(pred[0].split(" ")), 100)
+        
+        with self.subTest("Testing stripping prompt"):
+            pred = model.generate(
+                "what is your name?",
+                max_length=100,
+                tokenizer_handle="hf://google/gemma-2-2b",
+                strip_prompt=True,
+            )
+            self.assertIsInstance(pred[0], str)
+            self.assertNotIn("what is your name?", pred[0])
 
     @timeout(200)
     def test_generate_with_string_input_not_decoded(self):
-        pred = self.model.generate(
-            self.test_prompt,
-            max_length=5,
-            stop_token_ids=[],
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=False,
-        )
-        self.assertIsInstance(pred, dict)
-        self.assertEqual(len(pred["token_ids"]), 1)
-        self.assertEqual(len(pred["token_ids"][0]), 5)
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=128)
+        
+        with self.subTest("Testing not stripping prompt"):
+            pred = model.generate(
+                "what is your name?",
+                max_length=100,
+                stop_token_ids=[],
+                tokenizer_handle="hf://google/gemma-2-2b",
+                return_decoded=False,
+            )
+            self.assertIsInstance(pred, list)
+            self.assertIsInstance(pred[0], list)
+            self.assertIsInstance(pred[0][0], int)
+            self.assertEqual(len(pred[0]), 100)
+        
+        with self.subTest("Testing stripping prompt"):
+            pred = model.generate(
+                "what is your name?",
+                max_length=100,
+                stop_token_ids=[],
+                tokenizer_handle="hf://google/gemma-2-2b",
+                return_decoded=False,
+                strip_prompt=True,
+            )
+            self.assertLess(len(pred[0]), 95)
 
     @timeout(200)
-    def test_generate_with_string_input_strip_prompt_decoded(self):
-        pred = self.model.generate(
-            self.test_prompt,
-            max_length=5,
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=True,
-            strip_prompt=True,
-        )
-        self.assertIsInstance(pred[0], str)
-        self.assertFalse(pred[0].startswith(self.test_prompt))
+    def test_generate_with_mutiple_string_inputs(self):
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=128)
+        with self.subTest("Testing two string inputs"):
+            pred = model.generate(
+                ["what is your name?", "how is the weather?"],
+                max_length=128,
+                stop_token_ids=[],
+                tokenizer_handle="hf://google/gemma-2-2b",
+                return_decoded=False,
+                strip_prompt=False,
+            )
+            self.assertIsInstance(pred, list)
+            self.assertEqual(len(pred), 2)
+            self.assertEqual(len(pred[0]), 128)
+            self.assertEqual(len(pred[1]), 128)
 
-    @timeout(200)
-    def test_generate_with_string_input_strip_prompt_not_decoded(self):
-        pred = self.model.generate(
-            self.test_prompt,
-            max_length=5,
-            stop_token_ids=[],
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=False,
-            strip_prompt=True,
-        )
-        self.assertIsInstance(pred, dict)
-        self.assertEqual(len(pred["token_ids"][0]), 2)
-        self.assertEqual(len(pred["padding_mask"][0]), 2)
-        self.assertEqual(np.sum(pred["padding_mask"][0]), 2)
-
-    @timeout(200)
-    def test_generate_with_mutiple_string_input_strip_prompt_not_decoded(self):
-        pred = self.model.generate(
-            [self.test_prompt, self.test_prompt],
-            max_length=5,
-            stop_token_ids=[],
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=False,
-            strip_prompt=True,
-        )
-        self.assertIsInstance(pred, dict)
-        self.assertEqual(len(pred["token_ids"][0]), 2)
-        self.assertEqual(len(pred["padding_mask"][0]), 2)
-        self.assertEqual(np.sum(pred["padding_mask"][0]), 2)
-
-    @timeout(200)
-    def test_generate_with_model_input_not_decoded(self):
-        pred = self.model.generate(
-            self.model_input,
-            max_length=5,
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=False,
-        )
-        print(f"Generated token dictionary keys: {pred.keys()}")
-        self.assertIsInstance(pred, dict)
-
-    @timeout(200)
-    def test_generate_with_model_input_decoded(self):
-        pred = self.model.generate(
-            self.model_input,
-            max_length=5,
-            tokenizer_handle="hf://google/gemma-2-2b",
-            return_decoded=True,
-        )
-        self.assertIsInstance(pred[0], str)
+        with self.subTest("Testing 10 string inputs"):
+            pred = model.generate(
+                ["what is your name?", "how is the weather?"]*5,
+                max_length=128,
+                stop_token_ids=[],
+                tokenizer_handle="hf://google/gemma-2-2b",
+                return_decoded=False,
+                strip_prompt=False,
+            )
+            self.assertIsInstance(pred, list)
+            self.assertEqual(len(pred), 10)
+            for i in range(10):
+                self.assertEqual(len(pred[i]), 128)
 
     @timeout(200)
     def test_generate_with_tokenizer_object(self):
-        pred = self.model.generate(
-            self.model_input,
-            tokenizer=self.tokenizer,
-            max_length=5,
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=100)
+        tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-2b")
+        pred = model.generate(
+            "what is your name?",
+            tokenizer=tokenizer,
+            max_length=100,
             return_decoded=True,
         )
         self.assertIsInstance(pred[0], str)
 
+    @timeout(200)
+    def test_prompt_len_exceeds_max_prefill_len(self):
+        model = MaxTextModel.from_random("gemma2-2b", seq_len=100, max_prefill_predict_length=10)
+        with self.subTest("Testing single prompt"):
+            pred = model.generate(
+                    [np.ones(20, dtype="int")],
+                    tokenizer_handle="hf://google/gemma-2-2b",
+                    max_length=100,
+                    return_decoded=True,
+                )
+            # No new tokens should be generated since prefill won't be successful
+            self.assertEqual(len(pred[0]), 20)
+
+        with self.subTest("Testing multiple prompt"):
+            pred = model.generate(
+                    [np.ones(20, dtype="int"), np.ones(5, dtype="int"), np.ones(5, dtype="int")],
+                    tokenizer_handle="hf://google/gemma-2-2b",
+                    max_length=100,
+                    return_decoded=True,
+                )
+            # No new tokens should be generated since prefill won't be successful
+            self.assertEqual(len(pred[0]), 20)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
