@@ -150,7 +150,7 @@ Get Started
    📖 Supported Data Formats <datasets>
    📍 Finetuning Guide <finetuning_guide>
    📈 Scaling up with Ray <scaling_with_ray>
-   🏁 Serve with vLLM <vllm>
+   🏁 Serve with vLLM <serve_with_vllm>
    💡 Troubleshooting <troubleshooting>
    💌 Help and Feedback <help_and_feedback>
 
