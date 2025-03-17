@@ -17,7 +17,6 @@ limitations under the License.
 from typing import Optional, Union, List, Dict
 import numpy as np
 from transformers import AutoTokenizer
-from kithara.dataset.utils import initialize_tokenizer
 from kithara.model.hf_compatibility import get_model_name_from_preset_handle
 from kithara.model.maxtext.conversion_utils import MaxTextConversionMixin
 from kithara.model.maxtext.ckpt_compatibility import (
@@ -243,8 +242,8 @@ class MaxTextModel(Model, MaxTextConversionMixin):
         """Generate tokens using the model.
 
         Args:
-            inputs (list[str]|list[np.ndarray]): A list of strings, or a list 
-                of numpy arrays containing integer token ids.
+            inputs (list[str]|list[np.ndarray]): A non-empty list of strings
+                or numpy arrays.
             max_length (int, optional): Maximum total sequence length
                 (prompt + generated tokens).
             stop_token_ids (List[int], optional): List of token IDs that stop
@@ -265,16 +264,17 @@ class MaxTextModel(Model, MaxTextConversionMixin):
             inputs: list[np.ndarray] = self._convert_text_to_tokens(inputs, tokenizer)
 
         params = MaxTextConversionMixin.get_maxtext_params(self.model)
+        if max_length is None:
+            max_length = self.maxtext_config.max_target_length
+        max_length = min(max_length, self.maxtext_config.max_target_length)
 
         def run_inference_on_one_batch(batch_prompts: list[np.ndarray]):
-
             # Start result buffer with the prompt tokens, later we will strip
             # prompt tokens if strip_prompt=True
             batch_results = [
                 prompt.tolist() if isinstance(prompt, np.ndarray) else prompt
                 for prompt in batch_prompts
             ]
-            print("batch_results", batch_results)
             finished = [False for _ in batch_prompts]
             # Prefill with the prompt tokens
             for i, prompt_tokens in enumerate(batch_prompts):
@@ -282,8 +282,9 @@ class MaxTextModel(Model, MaxTextConversionMixin):
                     self.maxtext_config.max_prefill_predict_length, max_length
                 ):
                     print(
-                        f"Skipping {i}'th input because it's length ({len(prompt_tokens)}) exceeds max_length({max_length}) "
-                        "or max_prefill_predict_length({self.maxtext_config.max_prefill_predict_length})."
+                        f"Skipping {i}'th input because it's length "
+                        "({len(prompt_tokens)}) exceeds max_length({max_length}) "
+                        f"or max_prefill_predict_length({self.maxtext_config.max_prefill_predict_length})."
                     )
                     finished[i] = True
                     continue
@@ -303,7 +304,7 @@ class MaxTextModel(Model, MaxTextConversionMixin):
                     break
                 self.decode_state, _ = self.maxengine.generate(
                     params,
-                    self.decode_state,  # DO NOT SUBMIT. How does maxengine max length influence generation here?
+                    self.decode_state,
                 )
                 for i in range(len(batch_prompts)):
                     if finished[i]:
@@ -315,7 +316,6 @@ class MaxTextModel(Model, MaxTextConversionMixin):
                         finished[i] = True
                 if all(finished):
                     break
-            print("batch_results", batch_results)
             return batch_results
 
         results = []
@@ -334,7 +334,6 @@ class MaxTextModel(Model, MaxTextConversionMixin):
                     ]
                 )
             )
-        print("results",results)
         if strip_prompt:
             for i in range(total_num_prompts):
                 results[i] = results[i][len(inputs[i]) :]

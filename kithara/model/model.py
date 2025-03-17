@@ -187,10 +187,10 @@ class Model(ABC, ModelValidationMixin):
     ) -> Union[List[str] | List[List[int]]]:
         """Generate text tokens using the model.
         Args:
-            inputs (str|list[str]|list[np.ndarray]|list[list[int]]): A single string,
-                a list of strings, a numpy array or a list of numpy arrays containing
-                integer token ids, an integer array, or a list of integer arrays
-                containing token ids.
+            inputs (str|list[str]|list[np.ndarray]|list[list[int]]): Inputs can be
+                either string or integer tokens. String inputs can be a single string,
+                or a list of strings. Token inputs can be a numpy array,
+                a list of numpy arrays, an integer array, or a list of integer arrays.
             max_length (int, optional): Maximum total sequence length
                 (prompt + generated tokens).
             stop_token_ids (List[int], optional): List of token IDs that stop
@@ -232,20 +232,16 @@ class Model(ABC, ModelValidationMixin):
         """
 
         # Type checking
-
         if isinstance(inputs, np.ndarray):
+            inputs = [inputs]
+        elif isinstance(inputs, list) and isinstance(inputs[0], int):
             inputs = [inputs]
         elif isinstance(inputs, str):
             inputs = [inputs]
-        assert isinstance(
-            inputs, list
-        ), "inputs must be a str, a list of str, a np.ndarray, or a list of np.ndarray"
-        assert len(inputs) > 0, "inputs cannot be empty"
-        if isinstance(inputs[0], np.ndarray):
-            assert all(
-                np.issubdtype(arr.dtype, np.integer) for arr in inputs
-            ), "inputs must be integers"
-
+        if not isinstance(inputs, list):
+            raise TypeError(
+                "Non-list input must be a str or a np.ndarray."
+            )
         if isinstance(inputs[0], str) or return_decoded:
             assert (
                 tokenizer or tokenizer_handle
@@ -265,8 +261,10 @@ class Model(ABC, ModelValidationMixin):
             for attr in token_attributes:
                 if hasattr(tokenizer, attr):
                     stop_token_ids.append(getattr(tokenizer, attr))
-
-        tokens: list[np.ndarray] = self._generate(
+        
+        if isinstance(inputs[0], list):
+            inputs = [np.array(l) for l in inputs]
+        tokens: list[list[int]] = self._generate(
             inputs,
             max_length=max_length,
             stop_token_ids=stop_token_ids,
