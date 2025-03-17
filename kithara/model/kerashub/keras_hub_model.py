@@ -141,7 +141,7 @@ class KerasHubModel(Model):
         self,
         prompts: Union[str | List[str]],
         tokenizer:"AutoTokenizer",
-        max_length: int = 100,
+        max_length: int,
     ):
         assert (
             max_length is not None
@@ -194,7 +194,7 @@ class KerasHubModel(Model):
 
         if isinstance(inputs[0], str):
             inputs = self._convert_text_input_to_model_input(
-                inputs, max_length, tokenizer
+                inputs, tokenizer, max_length
             )
         else:
             inputs = self._pad_tokens_to_max_length(inputs, max_length)
@@ -207,15 +207,13 @@ class KerasHubModel(Model):
             stop_token_ids=stop_token_ids,
             strip_prompt=strip_prompt,
         )
-
-        # Return output but first stripped prompt
-        is_token = tokens["padding_mask"] == True
-        
-        if strip_prompt:
-            return [sample_tokens["token_ids"][is_token].tolist() for sample_tokens in tokens]
-        else:
-            return [sample_tokens["token_ids"].tolist() for sample_tokens in tokens]
-            
+                
+        results = []
+        for i in range(len(inputs["token_ids"])):
+            is_token = tokens["padding_mask"][i, :] == True
+            generated_tokens = tokens["token_ids"][i, :][is_token]
+            results.append(generated_tokens.tolist())
+        return results
 
     def save_in_hf_format(
         self,
