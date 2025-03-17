@@ -73,8 +73,10 @@ save_in_hf_format
    - Model weights file (model.safetensors for models smaller than DEFAULT_MAX_SHARD_SIZE, model-x-of-x.safetensors for larger models)
    - Safe tensors index file (model.safetensors.index.json)
 
-   :param output_dir: Directory path where the model should be saved. Can be local or Google cloud storage path.
-                   Will be created if it doesn't exist.
+   :param output_dir: Directory path where the model should be saved. Can be a local folder (e.g. "foldername/"), 
+                HuggingFaceHub repo prefixed with "hf://" (e.g. "hf://your_hf_id/repo_name") or a 
+                Google cloud storage path prefixed with "gs://" (e.g. "gs://your_bucket/folder_name), 
+                and will be created if it doesn't exist. 
    :param dtype: Data type for saved weights. Defaults to "auto" which saves the model in its current precision type. (default: "auto")
    :param parallel_threads: Number of parallel threads to use for saving (default: 8).
                         Note: Local system must have at least parallel_threads * DEFAULT_MAX_SHARD_SIZE free disk space,
@@ -157,8 +159,10 @@ save_in_hf_format
 
    Save the model in HuggingFace format, including configuration and weights files.
 
-   :param output_dir: Directory path where the model should be saved. Can be local or Google cloud storage path.
-                   Will be created if it doesn't exist.
+   :param output_dir: Directory path where the model should be saved. Can be a local folder (e.g. "foldername/"), 
+                HuggingFaceHub repo prefixed with "hf://" (e.g. "hf://your_hf_id/repo_name") or a 
+                Google cloud storage path prefixed with "gs://" (e.g. "gs://your_bucket/folder_name), 
+                and will be created if it doesn't exist. 
    :param dtype: Data type for saved weights. Defaults to "auto" which saves the model in its current precision type.
    :param only_save_adapters: If True, only adapter weights will be saved. If False, both base model weights and adapter weights will be saved. (default: False)
    :param save_adapters_separately: If False, adapter weights will be merged with base model. If True, adapter weights will be saved separately in HuggingFace's peft format. (default: False)

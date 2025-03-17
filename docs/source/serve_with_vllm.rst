@@ -1,4 +1,4 @@
-.. _vllm:
+.. serve_with_vllm:
 
 Serve with vLLM
 ==============

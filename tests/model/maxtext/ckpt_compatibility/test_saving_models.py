@@ -150,5 +150,31 @@ class TestSavingModels(unittest.TestCase):
             top1_token_tol=0.01
         )
 
+    @unittest.skipIf(int(os.getenv('RUN_SKIPPED_TESTS', 0)) != 1, "Manual Test")
+    def test_saving_to_huggingface_hub(self):
+        """Test saving a model directly to HuggingFace Hub."""
+        # Create Model
+        model = MaxTextModel.from_random(
+            "gemma2-2b",
+            seq_len=self.MAX_TARGET_LENGTH,
+            per_device_batch_size=1,
+            scan_layers=True,
+            precision="mixed_bfloat16",
+        )
+
+        # Save model
+        repo_id = "hf://wxxxxd/gemma-2-2b-test"
+        model.save_in_hf_format(repo_id, parallel_threads=1)
+    
+        # Load model
+        model = MaxTextModel.from_preset(
+            repo_id,
+            seq_len=self.MAX_TARGET_LENGTH,
+            per_device_batch_size=1,
+            scan_layers=True,
+            precision="mixed_bfloat16",
+        )
+        
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

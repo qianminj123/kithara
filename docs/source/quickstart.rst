@@ -7,10 +7,14 @@ This guide demonstrates how to fine-tune a Gemma2 2B model using LoRA with a toy
 
 The script can also be found on `Github <https://github.com/AI-Hypercomputer/kithara/blob/main/examples/singlehost/quick_start.py>`_.
 
+Prefer running in Colab? Check out the `this Colab Notebook instead <https://colab.sandbox.google.com/github/AI-Hypercomputer/kithara/blob/main/examples/colab/SFT_with_LoRA_Gemma2-2b.ipynb>`_.
 
 Setup
 -----
-Import required packages::
+Log into HuggingFace and import required packages::
+
+    from huggingface_hub import login
+    login(token="your_hf_token", add_to_git_credential=False)
 
     import os
     os.environ["KERAS_BACKEND"] = "jax"
@@ -23,6 +27,9 @@ Import required packages::
         SFTDataset,
     )
 
+.. tip::
+    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the Gemma2 HuggingFace model which will be used in this example.
+
 Quick Usage
 ----------
 
@@ -33,9 +40,6 @@ Quick Usage
         precision="mixed_bfloat16",
         lora_rank=4,
     )
-
-.. tip::
-    New to HuggingFace? First create an access token, `apply access <https://huggingface.co/google/gemma-2-2b>`_ to the HuggingFace model, and set the ``HF_TOKEN`` environment variable.
     
 2. Prepare Dataset::
 
@@ -55,13 +59,13 @@ Quick Usage
         train_ds,
         tokenizer_handle="hf://google/gemma-2-2b",
         max_seq_len=4096,
-    ).to_packed_dataset()
+    )
     
     eval_dataset = SFTDataset(
         eval_ds,
         tokenizer_handle="hf://google/gemma-2-2b",
         max_seq_len=4096,
-    ).to_packed_dataset()
+    )
     
     optimizer = keras.optimizers.AdamW(
         learning_rate=2e-4,

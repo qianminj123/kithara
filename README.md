@@ -40,7 +40,14 @@ Using TPUs provides significant advantages in terms of performance, cost-effecti
 | ✏️ **Get Started**               | [Intro to Kithara](https://kithara.readthedocs.io/en/latest/quickstart.html) |
 | 🌟 **Supported Models**           | [List of Models](https://kithara.readthedocs.io/en/latest/models.html)                           |
 | 🌐 **Supported Datasets**       | [List of Data Formats](https://kithara.readthedocs.io/en/latest/datasets.html)                       |
-| 🌵 **SFT + LoRA Example**       | [SFT + LoRA Example](https://kithara.readthedocs.io/en/latest/datasets.html)                       |
-| 🌵 **Continued Pretraining Example**       | [Continued Pretraining Example](https://kithara.readthedocs.io/en/latest/datasets.html)                       |
 | ⌛️ **Performance Optimizations** | [Our Memory and Throughput Optimizations](https://kithara.readthedocs.io/en/latest/optimizations.html)  |
 | 📈 **Scaling up**                 | [Guide for Tuning Large Models](https://kithara.readthedocs.io/en/latest/scaling_with_ray.html)   |
+
+
+## 🌵 **Examples**
+
+- **Quick Start Colab Notebook**: [SFT + LoRA with Gemma2-2b](https://colab.sandbox.google.com/github/AI-Hypercomputer/kithara/blob/main/examples/colab/SFT_with_LoRA_Gemma2-2b.ipynb)
+
+- **SFT + LoRA**:  [Step by Step Example](https://kithara.readthedocs.io/en/latest/sft.html)   
+                    
+- **Continued Pretraining**:  [Step by Step Example](https://kithara.readthedocs.io/en/latest/pretraining.html)  
