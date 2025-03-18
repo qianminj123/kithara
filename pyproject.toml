@@ -42,7 +42,9 @@ dependencies = [
         "ml-goodput-measurement",
         "google-cloud-monitoring",
         "omegaconf",
+        # Jetstream dependencies
         "seqio",
+        "setuptools==61.0"
 ]
 
 [project.optional-dependencies]

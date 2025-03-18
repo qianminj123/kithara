@@ -112,7 +112,7 @@ def _install_jetstream():
             print(f"Failed to install JetStream: {e}")
 
     jetsteam_dir = Path(
-        os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/JetSteam/jetstream")
+        os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/JetStream/jetstream")
     )
     sys.path.append(str(jetsteam_dir))
 
