@@ -42,6 +42,7 @@ dependencies = [
         "ml-goodput-measurement",
         "google-cloud-monitoring",
         "omegaconf",
+        "seqio",
 ]
 
 [project.optional-dependencies]
