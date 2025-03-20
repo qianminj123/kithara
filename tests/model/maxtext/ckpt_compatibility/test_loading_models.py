@@ -129,7 +129,5 @@ class TestLoadingModels(unittest.TestCase):
             top1_token_tol=0.01
         )
 
-
-
 if __name__ == '__main__':
     unittest.main(verbosity=2)

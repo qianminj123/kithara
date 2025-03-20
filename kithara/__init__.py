@@ -80,13 +80,41 @@ def _install_maxtext():
         except Exception as e:
             print(f"Failed to install maxtext: {e}")
 
-    maxtext_dir = Path(
-        os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/maxtext/MaxText")
-    )
+    maxtext_dir = Path(__file__).parent / "model/maxtext/maxtext/MaxText"
     sys.path.append(str(maxtext_dir))
 
+def _install_jetstream():
+    try:
+        importlib.metadata.version("google-jetstream")
+    except importlib.metadata.PackageNotFoundError:
+        try:
+            print(
+                "Installing JetStream... This should only happen once when Kithara is first initiated."
+            )
+            jetstream_path = Path(
+                os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/JetStream")
+            )
+            subprocess.check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "-e",
+                    str(jetstream_path),
+                    "--no-deps",
+                ]
+            )
+            print("JetStream installed successfully")
+        except Exception as e:
+            print(f"Failed to install JetStream: {e}")
+
+    jetstream_dir = Path(__file__).parent / "model/maxtext/JetStream/jetstream"
+    sys.path.append(str(jetstream_dir))
 
 _install_maxtext()
+_install_jetstream()
+
 
 from kithara.dataset import Dataloader, SFTDataset, TextCompletionDataset
 from kithara.trainer import Trainer
