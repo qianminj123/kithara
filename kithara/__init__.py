@@ -80,9 +80,7 @@ def _install_maxtext():
         except Exception as e:
             print(f"Failed to install maxtext: {e}")
 
-    maxtext_dir = Path(
-        os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/maxtext/MaxText")
-    )
+    maxtext_dir = Path(__file__).parent / "model/maxtext/maxtext/MaxText"
     sys.path.append(str(maxtext_dir))
 
 def _install_jetstream():
@@ -111,10 +109,8 @@ def _install_jetstream():
         except Exception as e:
             print(f"Failed to install JetStream: {e}")
 
-    jetsteam_dir = Path(
-        os.path.join(os.path.dirname(Path(__file__)), "model/maxtext/JetStream/jetstream")
-    )
-    sys.path.append(str(jetsteam_dir))
+    jetstream_dir = Path(__file__).parent / "model/maxtext/JetStream/jetstream"
+    sys.path.append(str(jetstream_dir))
 
 _install_maxtext()
 _install_jetstream()
