@@ -29,7 +29,7 @@ from kithara.distributed.sharding.utils import (
     get_size_in_mb,
     get_size_in_gb,
 )
-from kithara.optimizers import KitharaOptimizer, convert_to_kithara_optimizer
+from kithara.optimizers import convert_to_kithara_optimizer
 from kithara.model import Model
 from kithara.dataset import Dataloader
 from kithara.callbacks import Profiler, Checkpointer
@@ -47,7 +47,8 @@ class Trainer:
 
     Attributes:
         model (kithara.Model): The model to be trained or evaluated.
-        optimizer (keras.Optimizer | OptaxOptimizerConfig): The optimizer used for training.
+        optimizer (keras.Optimizer | optax.GradientTransformation | optax.GradientTransformationExtraArgs): The optimizer used for training.
+            It supports Keras optimizers and optax optimizers.
         train_dataloader (kithara.Dataloader): A dataloader that provides training batches.
         eval_dataloader (kithara.Dataloader, optional): A dataloader that provides evaluation batches.
             Defaults to None.
@@ -79,7 +80,7 @@ class Trainer:
     def __init__(
         self,
         model: Model,
-        optimizer: keras.Optimizer | optax.GradientTransformation,
+        optimizer: keras.Optimizer | optax.GradientTransformation | optax.GradientTransformationExtraArgs,
         train_dataloader: Dataloader,
         eval_dataloader: Dataloader = None,
         steps=None,
@@ -132,7 +133,7 @@ class Trainer:
         self.callbacks = self._create_callbacks()
         if self.tensorboard_dir:
             # Tensorboard requires reading "iteration" from model.optimizer
-            self.model.optimizer = optimizer
+            self.model.optimizer = self.optimizer
 
         # JIT compile training and evaluation steps for better performance
         self.train_step = self._make_train_step()
@@ -211,13 +212,8 @@ class Trainer:
         (loss, non_trainable_variables), grads = self.grad_fn(
             trainable_variables, non_trainable_variables, x, y
         )
-        if isinstance(self.optimizer, KitharaOptimizer):
-            trainable_variables, optimizer_variables = self.optimizer.stateless_apply(
-                trainable_variables, grads, optimizer_variables)
-        else:
-            trainable_variables, optimizer_variables = self.optimizer.stateless_apply(
-                optimizer_variables, grads, trainable_variables
-            )
+        trainable_variables, optimizer_variables = self.optimizer.stateless_apply(
+            optimizer_variables, grads, trainable_variables)
         return (
             loss,
             (
@@ -306,8 +302,8 @@ class Trainer:
                     "samples_per_second": round(samples_per_second, 2),
                     "train_steps_per_second": round(1 / step_time, 2),
                     "samples_seen": self.global_batch_size * self.step_count,
-                    "learning_rate": self.optimizer.learning_rate.value if isinstance(
-                        self.optimizer, keras.optimizers.Optimizer) else self.optimizer.learning_rate,
+                    "learning_rate": (self.optimizer.learning_rate.value
+                                      if self.optimizer.learning_rate is not None else None),
                 }
 
                 # Log progress
@@ -505,11 +501,7 @@ class Trainer:
             state.append([v.value for v in self.model.non_trainable_variables])
         if not optimizer_variables:
             return tuple(state)
-
-        if isinstance(self.optimizer, KitharaOptimizer):
-            state.append(self.optimizer.state_or_variables)
-        else:
-            state.append([v.value for v in self.optimizer.variables])
+        state.append(jax.tree.map(lambda leaf: leaf.value, self.optimizer.variables))
         return tuple(state)
 
     def _form_global_array(self, path, array: np.ndarray) -> jax.Array:
@@ -560,12 +552,12 @@ class Trainer:
             value = jax.lax.with_sharding_constraint(value, variable._layout)
             variable.assign(value)
 
-        if isinstance(self.optimizer, KitharaOptimizer):
-            return
-
-        for variable, value in zip(self.optimizer.variables, optimizer_variables):
-            value = jax.lax.with_sharding_constraint(value, variable._layout)
-            variable.assign(value)
+        _ = jax.tree.map(
+            lambda variable, value: variable.assign(
+                jax.lax.with_sharding_constraint(value, variable._layout)),
+            self.optimizer.variables,
+            optimizer_variables,
+        )
 
     def _prepare_batch_input_for_training(self, batch: List[str]):
         return jtu.tree_map_with_path(self._form_global_array, batch)
@@ -654,18 +646,18 @@ class Trainer:
                         value.shape,
                         value.sharding,
                     )
-            if isinstance(self.optimizer, KitharaOptimizer):
-                return
 
-            for variable, value in zip(self.optimizer.variables, state[2]):
-                if is_not_sharded_and_is_large(value):
-                    print(
-                        f"Step {self.step_count}: optimizer variable is not sharded",
-                        f"{get_size_in_mb(value)}mb",
-                        variable.path,
-                        value.shape,
-                        value.sharding,
-                    )
+            _ = jax.tree.map(
+                lambda variable, value: print(
+                    f"Step {self.step_count}: optimizer variable is not sharded",
+                    f"{get_size_in_mb(value)}mb",
+                    variable.path,
+                    value.shape,
+                    value.sharding,
+                ) if is_not_sharded_and_is_large(value) else None,
+                self.optimizer.variables,
+                state[2])
+
         except Exception as e:
             print(f"Error during sharding correctness validation: {e}")
 
@@ -682,11 +674,9 @@ class Trainer:
         for v in self.model.variables:
             total_size += get_size_in_mb(v.value)
 
-        if isinstance(self.optimizer, keras.optimizers.Optimizer):
-            for v in self.optimizer.variables:
-                total_size += get_size_in_mb(v.value)
-        if isinstance(self.optimizer, KitharaOptimizer):
-            total_size += self.optimizer.get_optimizer_memory_usage() / 10**20
+        total_size += jax.tree.reduce(
+            lambda agg, leaf: jax.numpy.add(agg, get_size_in_mb(leaf.value)), self.optimizer.variables,
+            initializer=0)
 
         live_arrays = jax.live_arrays()
         live_arrays_size = 0

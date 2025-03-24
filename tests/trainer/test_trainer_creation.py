@@ -130,6 +130,7 @@ class TestRunningSFT(unittest.TestCase):
         # Create Optax optimizer
         optimizer = optax.chain(
             optax.adamw(self.LEARNING_RATE, weight_decay=.01),
+            optax.clip(1.0)
         )
 
         # Initialize trainer

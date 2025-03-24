@@ -19,7 +19,8 @@ class TestKitharaOptimizer(unittest.TestCase):
         self.assertTrue(callable(KitharaOptimizer.stateless_apply))
         self.assertTrue(callable(KitharaOptimizer.get_optimizer_memory_usage))
         self.assertTrue(hasattr(KitharaOptimizer, "learning_rate"))
-        self.assertTrue(hasattr(KitharaOptimizer, "state_or_variables"))
+        self.assertTrue(hasattr(KitharaOptimizer, "iterations"))
+        self.assertTrue(hasattr(KitharaOptimizer, "variables"))
 
     @unittest.mock.patch("kithara.optimizers.OptaxOptimizerInterface")
     def test_convert_to_kithara_optimizer(

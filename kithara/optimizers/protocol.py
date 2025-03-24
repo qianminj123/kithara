@@ -1,11 +1,12 @@
 from typing import (
-    Protocol, Tuple,
-    TypeAlias, Optional,
+    Protocol, Tuple, TypeAlias,
     runtime_checkable)
-from jaxtyping import PyTree, Array
 
-TrainableVariable: TypeAlias = PyTree[Array]
-OptimizerVariable: TypeAlias = PyTree[Array]
+from jaxtyping import PyTree
+from keras.src.backend import Variable
+
+TrainableVariable: TypeAlias = PyTree[Variable]
+OptimizerVariable: TypeAlias = PyTree[Variable]
 
 @runtime_checkable
 class KitharaOptimizer(Protocol):
@@ -14,13 +15,16 @@ class KitharaOptimizer(Protocol):
     def learning_rate(self) -> float | None:
         ...
     @property
-    def state_or_variables(self) -> PyTree:
+    def variables(self) -> OptimizerVariable:
         ...
-    @state_or_variables.setter
-    def state_or_variables(self, state: PyTree):
+    @variables.setter
+    def variables(self, state: PyTree):
         ...
-    def stateless_apply(self, trainable_variables: TrainableVariable, gradients: PyTree,
-                        optimizer_variable: Optional[OptimizerVariable] = None,) -> Tuple[TrainableVariable, OptimizerVariable]:
+    @property
+    def iterations(self) -> Variable:
+        ...
+    def stateless_apply(self, optimizer_variable: OptimizerVariable, gradients: PyTree,
+                        trainable_variables: TrainableVariable) -> Tuple[TrainableVariable, OptimizerVariable]:
         """Apply the optimizer to the trainable variables and gradients.
 
         Apply the optimizer to the trainable variables and gradients. This method should be stateless, i.e. it should not
@@ -29,10 +33,10 @@ class KitharaOptimizer(Protocol):
         but not optimizer itself.
 
         Args:
-            trainable_variables (TrainableVariable): The trainable variables to apply the optimizer to
+            optimizer_variable (OptimizerVariable): The explicit optimizer state.
             gradients (PyTree): The gradients to apply to the trainable variables.
                 The shape of the gradients should match the shape of the `trainable variables`.
-            optimizer_variable (Optional[OptimizerVariable], optional): The explicit optimizer state. Defaults to None.
+            trainable_variables (TrainableVariable): The trainable variables to apply the optimizer to
 
         Returns:
             Tuple[TrainableVariable, OptimizerVariable]: The tuple of the updated trainable variables and the updated optimizer state.
