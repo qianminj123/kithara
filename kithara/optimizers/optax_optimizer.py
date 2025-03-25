@@ -44,7 +44,33 @@ class OptaxOptimizerInterface(KitharaOptimizer):
         return sum([leaf.nbytes for leaf in jax.tree_util.tree_leaves(self.variables)])
 
     def _convert_state_to_keras_variables(
-            self, opt_state: PyTree, trainable_vars: PyTree[backend.Variable]) -> PyTree[backend.Variable]:
+            self, opt_state: PyTree, trainable_vars: TrainableVariable) -> PyTree[backend.Variable]:
+        """Convert optax State to a `PyTree` of `keras.Variable`
+
+        Creates a structure (PyTree) of `keras.Variable` objects that mirrors
+        the structure of the optimizer state (`opt_state`).
+
+        For each subtree (e.g., momentum, variance) within the `opt_state` PyTree:
+            - Corresponding `keras.Variable` objects are created, one for each
+                associated trainable variable in the `trainable_vars` PyTree.
+            - Each created `keras.Variable` is named based on the path of its associated node in `trainable_vars`:
+                1. Take the trainable variable's path.
+                2. Replace all forward slashes (`/`) with underscores (`_`).
+                3. Append the suffix `_optstate`.
+
+        For Example:
+            - If a trainable variable's path in `trainable_vars` is
+            `"decoder-block-0/layer-1/kernel"`.
+            - The corresponding `keras.Variable` holding its optimizer state component
+            will be named `"decoder-block-0_layer-1_kernel_optstate"`.
+
+        Args:
+            opt_state (PyTree): the optax optimizer state
+            trainable_vars (PyTree[backend.Variable]): trainable variables
+
+        Returns:
+            PyTree[backend.Variable]: the transformed optax state.
+        """
 
         _, trainable_tree_def = jax.tree.flatten(trainable_vars)
 

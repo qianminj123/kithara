@@ -1,11 +1,11 @@
 from typing import (
-    Protocol, Tuple, TypeAlias,
+    Protocol, Tuple, TypeAlias, List,
     runtime_checkable)
 
 from jaxtyping import PyTree
 from keras.src.backend import Variable
 
-TrainableVariable: TypeAlias = PyTree[Variable]
+TrainableVariable: TypeAlias = List[Variable]
 OptimizerVariable: TypeAlias = PyTree[Variable]
 
 @runtime_checkable
