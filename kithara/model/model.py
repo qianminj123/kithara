@@ -171,42 +171,11 @@ class Model(ABC, ModelValidationMixin):
     def optimizer(self, optimizer):
         self._optimizer = optimizer
 
-    def _convert_text_input_to_model_input(
-        self,
-        prompts: Union[str | List[str]],
-        max_length: int = 100,
-        tokenizer: Optional[AutoTokenizer] = None,
-        tokenizer_handle: Optional[str] = None,
-    ):
-        assert (tokenizer is not None) or (tokenizer_handle is not None), (
-            "Cannot convert text input to model input because tokenizer and tokenizer_handle"
-            " are both not specified."
-        )
-
-        assert (
-            max_length is not None
-        ), "max_length must be provided to generate() when inputs are strings."
-
-        tokenizer = initialize_tokenizer(tokenizer_handle, tokenizer)
-
-        tokens: Dict[str, np.ndarray] = tokenizer(
-            prompts,
-            max_length=max_length,
-            padding="max_length",
-            padding_side="right",
-            truncation=True,
-            return_tensors="np",
-        )
-        input_ids = tokens["input_ids"]
-        attention_mask = tokens["attention_mask"]
-        return {
-            "token_ids": input_ids,
-            "padding_mask": attention_mask,
-        }
-
     def generate(
         self,
-        inputs: Union[str | List[str] | Dict[str, np.ndarray]],
+        inputs: Union[
+            str, List[str], List[int], np.ndarray, List[np.ndarray], List[List[int]]
+        ],
         max_length: int = 100,
         stop_token_ids: Union[str | List[int]] = "auto",
         strip_prompt: bool = False,
@@ -215,32 +184,34 @@ class Model(ABC, ModelValidationMixin):
         return_decoded: bool = True,
         skip_special_tokens: bool = True,
         **kwargs,
-    ) -> Union[List[str] | Dict[str, np.ndarray]]:
+    ) -> Union[List[str] | List[List[int]]]:
         """Generate text tokens using the model.
         Args:
-            inputs (list, dict): A single string, a list of strings, or a
-                dictionary with tokens as expected by the underlying model
-                during the forward pass. If strings are provided, one of
-                `tokenizer` and `tokenizer_handle` must be provided.
+            inputs (str|list[str]|list[np.ndarray]|list[list[int]]): Inputs can be
+                either string or integer tokens. String inputs can be a single string,
+                or a list of strings. Token inputs can be a numpy array,
+                a list of numpy arrays, an integer array, or a list of integer arrays.
             max_length (int, optional): Maximum total sequence length
-                (prompt + generated tokens). If `tokenizer` and `tokenizer_handle`
-                are `None`, `inputs` should be should be padded to the desired
-                maximum length and this argument will be ignored. When `inputs` is
-                string, this value must be provided.
+                (prompt + generated tokens).
             stop_token_ids (List[int], optional): List of token IDs that stop
                 generation. Defaults to "auto", which extracts the end token id
                 from the tokenizer.
             strip_prompt (bool, optional): If True, returns only the generated
                 tokens without the input prompt. If False, returns the full sequence
                 including the prompt. Defaults to False.
-            return_decoded (bool, optional): If Ture, returns the decoded text using
-                the tokenizer, otherwise return the predicted tokens. Defautl to True.
+            tokenizer (AutoTokenizer, optional): A HuggingFace AutoTokenizer instance
+            tokenizer_handle (str, optional): A HuggingFace Tokenizer handle, e.g.
+                "google/gemma-2-2b"
+            return_decoded (bool, optional): If True, returns the decoded text using
+                the tokenizer, otherwise return the predicted tokens. Default to True.
                 This option must be set to False if no tokenizer is provided.
+            skip_special_tokens(bool, optional): If True, skip special tokens during
+                decoding. E.g. will not include <bos> and <eos> in the final output.
+                This option is ignore when return_decoded=False. Default to True.
+
         Returns:
-            A list of string if input is text, or a dictionary containing the following
-                keys if the input is tokens.
-                - 'token_ids': Generated token IDs (numpy.ndarray) of shape [B, S]
-                - 'padding_mask': Attention mask for the generated sequence (numpy.ndarray) of shape [B, S]
+            A list of string if return_decoded=True, or a list[list[int]] containing
+            generated token IDs for each prompt
 
         Example:
             ```
@@ -258,167 +229,87 @@ class Model(ABC, ModelValidationMixin):
             tokenizer = AutoTokenizer.from_pretrained("hf://google/gemma-2-2b")
             pred_text = model.generate(prompt, max_length=100, tokenizer=tokenizer, return_decoded=True, strip_prompt=True)
             ```
-
         """
 
-        if isinstance(inputs, str) or isinstance(inputs, list) or return_decoded:
-            assert (tokenizer or tokenizer_handle) is not None
-
-        if isinstance(inputs, str) or isinstance(inputs, list):
-            inputs = self._convert_text_input_to_model_input(
-                inputs, max_length, tokenizer, tokenizer_handle
+        # Type checking
+        if isinstance(inputs, np.ndarray):
+            inputs = [inputs]
+        elif isinstance(inputs, list) and isinstance(inputs[0], int):
+            inputs = [inputs]
+        elif isinstance(inputs, str):
+            inputs = [inputs]
+        if not isinstance(inputs, list):
+            raise TypeError(
+                "Non-list input must be a str or a np.ndarray."
             )
+        if isinstance(inputs[0], str) or return_decoded:
+            assert (
+                tokenizer or tokenizer_handle
+            ) is not None, "Either tokenizer or tokenizer_handle must be provided when inputs are strings."
+
+        if tokenizer or tokenizer_handle:
+            tokenizer = initialize_tokenizer(tokenizer_handle, tokenizer)
 
         if stop_token_ids == "auto":
             stop_token_ids = []
-            if tokenizer or tokenizer_handle:
-                tokenizer = initialize_tokenizer(tokenizer_handle, tokenizer)
-
-                token_attributes = [
-                    "end_token_id",
-                    "eos_token_id",
-                    "end_token2_id",
-                    "eos_token2_id",
-                ]
-
-                for attr in token_attributes:
-                    if hasattr(tokenizer, attr):
-                        stop_token_ids.append(getattr(tokenizer, attr))
-
-        tokens: Dict[str, Any] = self._generate(
+            token_attributes = [
+                "end_token_id",
+                "eos_token_id",
+                "end_token2_id",
+                "eos_token2_id",
+            ]
+            for attr in token_attributes:
+                if hasattr(tokenizer, attr):
+                    stop_token_ids.append(getattr(tokenizer, attr))
+        
+        if isinstance(inputs[0], list):
+            inputs = [np.array(l) for l in inputs]
+        tokens: list[list[int]] = self._generate(
             inputs,
             max_length=max_length,
             stop_token_ids=stop_token_ids,
             strip_prompt=strip_prompt,
+            tokenizer=tokenizer,
         )
         if return_decoded:
             tokenizer = initialize_tokenizer(tokenizer_handle, tokenizer)
-
             text = [
                 tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
-                for token_ids in tokens["token_ids"]
+                for token_ids in tokens
             ]
             return text
         return tokens
 
+    @abstractmethod
     def _generate(
         self,
-        inputs: Dict[str, np.ndarray],
+        inputs: Union[List[str], List[np.ndarray]],
         max_length: int = None,
         stop_token_ids: Optional[List] = None,
         strip_prompt: str = False,
-        tokens_key: str = "token_ids",
-        padding_mask_key: str = "padding_mask",
-        **kwargs,
-    ) -> Dict[str, np.ndarray]:
-        """Generate tokens using the model.
+        tokenizer: Optional["AutoTokenizer"] = None,
+    ) -> List[List[int]]:
+        """Generate tokens using the model. This function is intended to generate
+        tokens for custom models. MaxTextModel and KerasHubModel have provided
+        their own `_generate()` implementation.
 
         Args:
-            tokens_key (str, optional): Key in the inputs dictionary for token IDs.
-                Defaults to "token_ids".
-            padding_mask_key (str, optional): Key in the inputs dictionary for padding
-                mask. Defaults to "padding_mask".
-            For the rest of the args, please refer to `generate()`.
+            inputs (list[str]|list[np.ndarray]): A list of strings, or a list
+                of numpy arrays containing integer token ids.
+            max_length (int, optional): Maximum total sequence length
+                (prompt + generated tokens).
+            stop_token_ids (List[int], optional): List of token IDs that stop
+                generation.
+            strip_prompt (bool, optional): If True, returns only the generated
+                tokens without the input prompt tokens. If False, returns all
+                tokens, including the prompt tokens. Defaults to False.
+            tokenizer (AutoTokenizer, optional): A HuggingFace AutoTokenizer instance.
+                This is guaranteed to be provided when inputs are strings.
 
         Returns:
-            dict: Dictionary containing:
-                - 'token_ids': Generated token IDs (numpy.ndarray) of shape [B, S]
-                - 'padding_mask': Attention mask for the generated sequence (numpy.ndarray) of shape [B, S]
+            list[list[int]]: Generated token IDs for each prompt
         """
-        if stop_token_ids is None:
-            stop_token_ids = []
-        if max_length < 1:
-            raise ValueError("Please either a positive max_length.")
-        if max_length == None and len(stop_token_ids) == 0:
-            raise ValueError("Please either specify max_length or stop_token_ids.")
-
-        jitted_generate_fn = self.make_generate_step()
-        batch_size = inputs[tokens_key].shape[0]
-
-        # Pad batch to be a multiple of fsdp dimension
-        mesh = self.sharding_strategy.data_sharding.mesh
-        devices_in_data_fsdp = (
-            mesh.shape[Axis.FSDP] if Axis.FSDP in mesh.shape else mesh.shape["fsdp"]
-        )
-        remainder = batch_size % devices_in_data_fsdp
-        if remainder != 0:
-            pad_size = devices_in_data_fsdp - remainder
-            for key in inputs.keys():
-                inputs[key] = np.pad(
-                    inputs[key],
-                    ((0, pad_size), (0, 0)),
-                    mode="constant",
-                    constant_values=0,
-                )
-
-        def next_token(current_inputs):
-            current_inputs = jax.device_put(
-                current_inputs, self.sharding_strategy.data_sharding
-            )
-            logits = jitted_generate_fn(
-                [v.value for v in self.model.trainable_variables],
-                [v.value for v in self.model.non_trainable_variables],
-                current_inputs,
-            )
-            jax.block_until_ready(logits)
-            return logits
-
-        tokens = inputs[tokens_key]
-        segment_ids = inputs[padding_mask_key]
-
-        # Calculate initial number of tokens (where segment_ids == 1)
-        num_tokens = int(np.sum(segment_ids[0] == 1))
-        seq_len = segment_ids.shape[1]
-
-        # Calculate how many tokens we can/should generate
-        max_length = min(seq_len, max_length) if max_length else seq_len
-        generate_steps = max_length - num_tokens
-
-        # Track which sequences have reached EOS
-        reached_eos = [False for _ in range(batch_size)]
-
-        for s in range(generate_steps):
-            current_inputs = {
-                **inputs,
-                tokens_key: tokens,
-                padding_mask_key: segment_ids,
-            }
-
-            # Get next token predictions
-            logits = next_token(current_inputs)
-
-            next_token_logits = logits[:, num_tokens - 1, :]
-            next_tokens = keras.ops.argmax(next_token_logits, axis=-1)
-            next_tokens = multihost_utils.process_allgather(next_tokens)
-            # Update the tokens array with predictions
-            tokens[:, num_tokens] = next_tokens
-
-            # Update attention mask (segment_ids)
-            segment_ids = np.roll(segment_ids, 1, axis=1)
-            segment_ids[:, 0] = 1
-
-            # Increment number of tokens
-            num_tokens += 1
-            # Check for EOS tokens
-            for i, token in enumerate(next_tokens.flatten()[:batch_size]):
-                if token in stop_token_ids:
-                    reached_eos[i] = True
-            if np.all(reached_eos):
-                generate_steps = s + 1
-                break
-
-        token_ids = tokens[:batch_size, :num_tokens]
-        padding_mask = segment_ids[:batch_size, :num_tokens]
-        if strip_prompt:
-            token_ids = tokens[:batch_size, num_tokens - generate_steps : num_tokens]
-            padding_mask = segment_ids[
-                :batch_size, num_tokens - generate_steps : num_tokens
-            ]
-
-        return {
-            "padding_mask": padding_mask,
-            "token_ids": token_ids,
-        }
+        pass
 
 
 def set_precision(

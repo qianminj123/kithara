@@ -1,6 +1,6 @@
 .. _dws_flex_start:
 
-Create DWS (Flex Start) VMs
+Create DWS (Flex Start) VMs [Coming soon by end of March 2025]
 ++++++++++++++++++++++++++
 
 Flex Start uses the TPU queued resources API to request TPU resources in a queued manner. When the requested resource becomes available, it's assigned to your Google Cloud project for your immediate, exclusive use. After the requested run duration, the TPU VMs are deleted and the queued resource moves to the ``SUSPENDED`` state. For more information about queued resources, see `Manage queued resources <https://cloud.google.com/tpu/docs/queued-resources>`_.
@@ -50,7 +50,7 @@ For more information about optional flags, see the `gcloud alpha compute tpus qu
 .. get_status::
 
 Get the status of a Flex Start request
-++++++++++++++++++++++
+~~~~~~~
 
 To monitor the status of your Flex Start request, use the queued resources API to get the status of the queued resource request using the `gcloud alpha compute tpus queued-resources describe <https://cloud.google.com/sdk/gcloud/reference/alpha/compute/tpus/queued-resources/describe>`_ command:
 
@@ -72,7 +72,7 @@ For more information, see `Retrieve state and diagnostic information about a que
 request <https://cloud.google.com/tpu/docs/queued-resources#retrieve_state_and_diagnostic_information_about_a_queued_resource_request>`_.
 
 Monitor the run time of Flex Start TPUs
-++++++++
+~~~~~~
 
 You can monitor the run time of Flex Start TPUs by checking the TPU's termination timestamp:
 
@@ -84,7 +84,7 @@ You can monitor the run time of Flex Start TPUs by checking the TPU's terminatio
     when the TPU will be terminated.
 
 Delete a queued resource
-+++++++
+~~~~~~
 
 **Important:** Queued resources consume quota regardless of their state. Delete queued resources after use to avoid blocking future requests on quota limits.
 

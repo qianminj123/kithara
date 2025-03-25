@@ -302,8 +302,9 @@ class Trainer:
                     "samples_per_second": round(samples_per_second, 2),
                     "train_steps_per_second": round(1 / step_time, 2),
                     "samples_seen": self.global_batch_size * self.step_count,
-                    "learning_rate": (self.optimizer.learning_rate.value
+                    "learning_rate": (round(float(self.optimizer.learning_rate.value),7)
                                       if self.optimizer.learning_rate is not None else None),
+
                 }
 
                 # Log progress

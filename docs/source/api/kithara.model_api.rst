@@ -85,11 +85,13 @@ save_in_hf_format
 generate
 ^^^^^^^
 
-.. py:method:: generate(inputs: Union[str | List[str] | Dict[str, np.ndarray]], max_length: int = 100, stop_token_ids: Union[str | List[int]] = "auto", strip_prompt: bool = False, tokenizer: Optional[AutoTokenizer] = None, tokenizer_handle: Optional[str] = None, return_decoded: bool = True, skip_special_tokens: bool = True, **kwargs) -> Union[List[str] | Dict[str, np.ndarray]]
+.. py:method:: generate(inputs: Union[str | List[str] | List[int] | np.ndarray | List[np.ndarray] | List[List[int]]], max_length: int = 100, stop_token_ids: Union[str | List[int]] = "auto", strip_prompt: bool = False, tokenizer: Optional[AutoTokenizer] = None, tokenizer_handle: Optional[str] = None, return_decoded: bool = True, skip_special_tokens: bool = True, **kwargs) -> Union[List[str] | Dict[str, np.ndarray]]
 
    Generate text tokens using the model.
 
-   :param inputs: A single string, a list of strings, or a dictionary with tokens as expected by the underlying model during the forward pass. If strings are provided, one of `tokenizer` and `tokenizer_handle` must be provided.
+   :param inputs: Inputs can be either string or integer tokens. String inputs can be a single string,
+                or a list of strings. Token inputs can be a numpy array, a list of numpy arrays, an integer array, 
+                or a list of integer arrays. If strings are provided, one of `tokenizer` and `tokenizer_handle` must be provided.
    :param max_length: Maximum total sequence length (prompt + generated tokens). If `tokenizer` and `tokenizer_handle` are `None`, `inputs` should be padded to the desired maximum length and this argument will be ignored. When `inputs` is string, this value must be provided. (default: 100)
    :param stop_token_ids: List of token IDs that stop generation. Defaults to "auto", which extracts the end token id from the tokenizer.
    :param strip_prompt: If True, returns only the generated tokens without the input prompt. If False, returns the full sequence including the prompt. (default: False)
@@ -183,12 +185,13 @@ save_in_hf_format
 
 generate
 ^^^^^^^
-
-.. py:method:: generate(inputs: Union[str | List[str] | Dict[str, np.ndarray]], max_length: int = 100, stop_token_ids: Union[str | List[int]] = "auto", strip_prompt: bool = False, tokenizer: Optional[AutoTokenizer] = None, tokenizer_handle: Optional[str] = None, return_decoded: bool = True, skip_special_tokens: bool = True, **kwargs) -> Union[List[str] | Dict[str, np.ndarray]]
+.. py:method:: generate(inputs: Union[str | List[str] | List[int] | np.ndarray | List[np.ndarray] | List[List[int]]], max_length: int = 100, stop_token_ids: Union[str | List[int]] = "auto", strip_prompt: bool = False, tokenizer: Optional[AutoTokenizer] = None, tokenizer_handle: Optional[str] = None, return_decoded: bool = True, skip_special_tokens: bool = True, **kwargs) -> Union[List[str] | Dict[str, np.ndarray]]
 
    Generate text tokens using the model.
 
-   :param inputs: A single string, a list of strings, or a dictionary with tokens as expected by the underlying model during the forward pass. If strings are provided, one of `tokenizer` and `tokenizer_handle` must be provided.
+   :param inputs: Inputs can be either string or integer tokens. String inputs can be a single string,
+                or a list of strings. Token inputs can be a numpy array, a list of numpy arrays, an integer array, 
+                or a list of integer arrays. If strings are provided, one of `tokenizer` and `tokenizer_handle` must be provided.
    :param max_length: Maximum total sequence length (prompt + generated tokens). If `tokenizer` and `tokenizer_handle` are `None`, `inputs` should be padded to the desired maximum length and this argument will be ignored. When `inputs` is string, this value must be provided. (default: 100)
    :param stop_token_ids: List of token IDs that stop generation. Defaults to "auto", which extracts the end token id from the tokenizer.
    :param strip_prompt: If True, returns only the generated tokens without the input prompt. If False, returns the full sequence including the prompt. (default: False)

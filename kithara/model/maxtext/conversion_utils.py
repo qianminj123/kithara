@@ -164,10 +164,7 @@ class MaxTextConversionMixin:
             argv += [f"model_name={model_name}"]
         if maxtext_config is not None:
             argv += maxtext_config.split(" ")
-        # pyconfig.initialize must be called before
-        # any JAX computations are executed.
-        pyconfig.initialize(argv)
-        config = pyconfig.config
+        config = pyconfig.initialize(argv)
         return config
 
     @staticmethod
@@ -178,6 +175,7 @@ class MaxTextConversionMixin:
         weight_dtype: str,
         activation_dtype: str,
         scan_layers: bool,
+        max_prefill_predict_length: int,
         maxtext_config_args: Optional[str] = None,
     ) -> tuple[ShardingStrategy, keras.Model]:
         """Initialize a random MaxText model with the input configuration.
@@ -221,7 +219,11 @@ class MaxTextConversionMixin:
         maxtext_config_args["per_device_batch_size"] = per_device_batch_size
         assert "max_target_length" not in maxtext_config_args
         maxtext_config_args["max_target_length"] = seq_len
-
+        assert "max_prefill_predict_length" not in maxtext_config_args
+        maxtext_config_args["max_prefill_predict_length"] = max_prefill_predict_length
+        if "enable_checkpointing" not in maxtext_config_args:
+            maxtext_config_args["enable_checkpointing"] = False
+        
         maxtext_config_args = " ".join(
             [f"{key}={value}" for key, value in maxtext_config_args.items()]
         )
@@ -263,4 +265,25 @@ class MaxTextConversionMixin:
         )
 
         print(f"✅ Successfully initialized a MaxText {model_name} model in {time.time() - start_time:.3f}s...")
-        return sharding_strategy, model
+        return maxtext_config, sharding_strategy, model
+
+    def get_maxtext_params(model: "kithara.MaxTextModel") -> dict:
+        """Convert Kithara variables (flat list format) into 
+        MaxText variables (nested dict format). This function 
+        is a simple format converter. It is used for inserting 
+        the current model parameters into MaxText's inference 
+        engine. 
+        """
+        params = {}
+        for v in model.variables:
+            variable_name = v.path
+            nest_keys = variable_name.split("/")[-1].split("-")
+            if nest_keys[0] != "params":
+                continue
+                
+            current = params
+            for key in nest_keys[:-1]:  # All keys except the last one
+                current = current.setdefault(key, {})
+            current[nest_keys[-1]] = v.value
+            
+        return params

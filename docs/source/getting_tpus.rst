@@ -54,7 +54,7 @@ A TPU chip typically (but not always) consists of two TPU cores which share memo
 
 Where are these terms used typically?
 
-*   **Chips:** To define pricing. E.g: price-per-chip-hour
+*   **Chips:** To define pricing. E.g: price-per-chip-hour. Chips are also the equivalent of "devices" in the JAX language.
 *   **Cores:** To create VMs. E.g: You may request a v5e-8 which requests 8 cores (for v5e, this is also equal to 8 chips). Or, you may request v5p-8 which creates a VM with 8 cores (4 chips).
 
 
