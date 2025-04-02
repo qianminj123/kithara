@@ -29,7 +29,7 @@ Singlehost: python examples/singlehost/quick_start.py
 Multihost:  python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/quick_start.py" --hf-token your_token
 """
 from huggingface_hub import login
-login(token="your_hf_token", add_to_git_credential=False)
+login(token="", add_to_git_credential=False)
 
 import os
 
@@ -110,7 +110,9 @@ def run_workload():
     checkpointer = Checkpointer(
         "gs://qianminj-bucket/ckpt5",
         model=model,
-        save_interval_steps=20,
+        save_interval_steps=2,
+        save_optimizer=True,
+        optimizer=optimizer
     )
 
     # Initialize trainer
