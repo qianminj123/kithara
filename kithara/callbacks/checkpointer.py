@@ -140,10 +140,10 @@ class Checkpointer(Callback):
         #print("qianminjdebug")
         state_tree = self.model.get_state_tree()
         #print(state_tree["optimizer_variables"]["adam"])
-        model_state = [{
-            v.path: v.value for v in self.model.variables
-            }, {v.path: v.value for v in self._optimizer.variables}]
+        model_state = {v.path: v.value for v in self.model.variables} | {v.path: v.value for v in self._optimizer.variables}
         jax.block_until_ready(model_state)
+        #print("qianminjdebug")
+        #print(model_state)
         
         self.mngr.save(step, args=ocp.args.StandardSave(model_state))
 
@@ -177,7 +177,7 @@ class Checkpointer(Callback):
         
         state = {
             v.path: v.value for v in self.model.variables
-            }
+            } | {v.path: v.value for v in self._optimizer.variables}
         abstract_state = jax.tree.map(ocp.tree.to_shape_dtype_struct, state)
 
         def set_dtype(abstract_arr):
@@ -186,11 +186,14 @@ class Checkpointer(Callback):
         state = self.mngr.restore(step, args=ocp.args.StandardRestore(
             jax.tree.map(set_dtype, abstract_state)))
         print("qianminjdebug")
-        print(dtype(state))
-        print(tree_structure(state))
+        #print(state)
         
         if in_place: 
             for v in self.model.variables:
+                new_var = state[v.path]
+                v.assign(new_var)
+            for v in self._optimizer.variables:
+                print(v.path)
                 new_var = state[v.path]
                 v.assign(new_var)
 

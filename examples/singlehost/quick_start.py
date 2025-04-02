@@ -50,7 +50,7 @@ config = {
     "seq_len": 4096,
     "lora_rank": 16,
     "precision": "mixed_bfloat16",
-    "training_steps": 60,
+    "training_steps": 10,
     "eval_steps_interval": 10,
     "log_steps_interval": 1,
     "per_device_batch_size": 1,
@@ -108,7 +108,7 @@ def run_workload():
 
     # Initialize checkpointer
     checkpointer = Checkpointer(
-        "gs://qianminj-bucket/ckpt5",
+        "gs://qianminj-bucket/ckpt04021227",
         model=model,
         save_interval_steps=2,
         save_optimizer=True,
@@ -132,6 +132,8 @@ def run_workload():
     trainer.train()
     
     print("Finished training. Prompting model...")
+
+    checkpointer.load()
 
     # Test after tuning
     pred = model.generate(
