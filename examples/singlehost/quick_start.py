@@ -28,6 +28,8 @@ For mulit-host set up, please follow https://kithara.readthedocs.io/en/latest/sc
 Singlehost: python examples/singlehost/quick_start.py 
 Multihost:  python ray/submit_job.py "python3.11 examples/multihost/ray/TPU/quick_start.py" --hf-token your_token
 """
+from huggingface_hub import login
+login(token="", add_to_git_credential=False)
 
 import os
 
@@ -35,6 +37,7 @@ os.environ["KERAS_BACKEND"] = "jax"
 import keras
 import ray
 from kithara import (
+    Checkpointer,
     KerasHubModel,
     Dataloader,
     Trainer,
@@ -47,7 +50,7 @@ config = {
     "seq_len": 4096,
     "lora_rank": 16,
     "precision": "mixed_bfloat16",
-    "training_steps": 60,
+    "training_steps": 10,
     "eval_steps_interval": 10,
     "log_steps_interval": 1,
     "per_device_batch_size": 1,
@@ -103,6 +106,15 @@ def run_workload():
         per_device_batch_size=config["per_device_batch_size"],
     )
 
+    # Initialize checkpointer
+    checkpointer = Checkpointer(
+        "gs://qianminj-bucket/ckpt04021227",
+        model=model,
+        save_interval_steps=2,
+        save_optimizer=True,
+        optimizer=optimizer
+    )
+
     # Initialize trainer
     trainer = Trainer(
         model=model,
@@ -113,12 +125,15 @@ def run_workload():
         eval_steps_interval=config["eval_steps_interval"],
         max_eval_samples=config["max_eval_samples"],
         log_steps_interval=config["log_steps_interval"],
+        checkpointer=checkpointer,
     )
 
     # Start training
     trainer.train()
     
     print("Finished training. Prompting model...")
+
+    checkpointer.load()
 
     # Test after tuning
     pred = model.generate(

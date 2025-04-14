@@ -21,6 +21,8 @@ import jax
 import orbax.checkpoint as ocp
 from typing import Optional
 import os
+from kithara.optimizers.protocol import KitharaOptimizer
+from jax.tree_util import tree_structure
 
 CheckpointManager = ocp.CheckpointManager
 CheckpointManagerOptions = ocp.CheckpointManagerOptions
@@ -49,6 +51,7 @@ class Checkpointer(Callback):
             Defaults to True.
         by_epoch (bool): Whether to save checkpoints based on epoch count. 
             Defaults to False.
+        save_optimizer (bool): Whether to save the optimizer.
 
     Example:
         ```
@@ -77,7 +80,9 @@ class Checkpointer(Callback):
         save_interval_steps: int = 100,
         max_to_keep:int = 5,
         by_batch: bool = True, 
-        by_epoch: bool = False, 
+        by_epoch: bool = False,
+        save_optimizer: bool = False,
+        optimizer: Optional['KitharaOptimizer'] = None,
     ):
         super().__init__()
         self.checkpoint_dir = checkpoint_dir
@@ -94,6 +99,8 @@ class Checkpointer(Callback):
         if model: 
             self._model = model
         assert self._model is not None, "Please provide the model instance when creating the Checkpointer."
+        self._save_optimizer = save_optimizer
+        self._optimizer = optimizer
 
     def on_train_batch_end(self, batch, logs=None):
         """Called at the end of every training batch."""
@@ -128,12 +135,17 @@ class Checkpointer(Callback):
             save the checkpoint, and exit the program to ensure state is preserved.
         """
         print(f"-> Saving checkpoint after {step} training steps/epochs...")
-        state = {
-            v.path: v.value for v in self.model.variables
-        }
-        jax.block_until_ready(state)
+        #print("qianminjdebug")
+        #print(tree_structure(self.model.variables))
+        #print("qianminjdebug")
+        state_tree = self.model.get_state_tree()
+        #print(state_tree["optimizer_variables"]["adam"])
+        model_state = {v.path: v.value for v in self.model.variables} | {v.path: v.value for v in self._optimizer.variables}
+        jax.block_until_ready(model_state)
+        #print("qianminjdebug")
+        #print(model_state)
         
-        self.mngr.save(step, args=ocp.args.StandardSave(state))
+        self.mngr.save(step, args=ocp.args.StandardSave(model_state))
 
         # If we are at a preemption step, we must wait for the 
         # checkpoint to finish writing before exiting.
@@ -165,7 +177,7 @@ class Checkpointer(Callback):
         
         state = {
             v.path: v.value for v in self.model.variables
-            }
+            } | {v.path: v.value for v in self._optimizer.variables}
         abstract_state = jax.tree.map(ocp.tree.to_shape_dtype_struct, state)
 
         def set_dtype(abstract_arr):
@@ -173,9 +185,15 @@ class Checkpointer(Callback):
 
         state = self.mngr.restore(step, args=ocp.args.StandardRestore(
             jax.tree.map(set_dtype, abstract_state)))
+        print("qianminjdebug")
+        #print(state)
         
         if in_place: 
             for v in self.model.variables:
+                new_var = state[v.path]
+                v.assign(new_var)
+            for v in self._optimizer.variables:
+                print(v.path)
                 new_var = state[v.path]
                 v.assign(new_var)
 
