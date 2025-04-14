@@ -21,6 +21,7 @@ import jax
 import orbax.checkpoint as ocp
 from typing import Optional
 import os
+from kithara.optimizers.protocol import KitharaOptimizer
 
 CheckpointManager = ocp.CheckpointManager
 CheckpointManagerOptions = ocp.CheckpointManagerOptions
@@ -49,6 +50,7 @@ class Checkpointer(Callback):
             Defaults to True.
         by_epoch (bool): Whether to save checkpoints based on epoch count. 
             Defaults to False.
+        optimizer (Optional[KitharaOptimizer]): The optimizer instance to checkpoint.
 
     Example:
         ```
@@ -78,6 +80,7 @@ class Checkpointer(Callback):
         max_to_keep:int = 5,
         by_batch: bool = True, 
         by_epoch: bool = False, 
+        optimizer: Optional['KitharaOptimizer'] = None,
     ):
         super().__init__()
         self.checkpoint_dir = checkpoint_dir
@@ -94,6 +97,8 @@ class Checkpointer(Callback):
         if model: 
             self._model = model
         assert self._model is not None, "Please provide the model instance when creating the Checkpointer."
+        if optimizer:
+            self._optimizer = optimizer
 
     def on_train_batch_end(self, batch, logs=None):
         """Called at the end of every training batch."""
@@ -131,6 +136,10 @@ class Checkpointer(Callback):
         state = {
             v.path: v.value for v in self.model.variables
         }
+        if self._optimizer:
+            state = state | {
+            v.path: v.value for v in self._optimizer.variables
+        }
         jax.block_until_ready(state)
         
         self.mngr.save(step, args=ocp.args.StandardSave(state))
@@ -165,6 +174,10 @@ class Checkpointer(Callback):
         
         state = {
             v.path: v.value for v in self.model.variables
+        }
+        if self._optimizer:
+            state = state | {
+                v.path: v.value for v in self._optimizer.variables
             }
         abstract_state = jax.tree.map(ocp.tree.to_shape_dtype_struct, state)
 
@@ -176,6 +189,9 @@ class Checkpointer(Callback):
         
         if in_place: 
             for v in self.model.variables:
+                new_var = state[v.path]
+                v.assign(new_var)
+            for v in self._optimizer.variables:
                 new_var = state[v.path]
                 v.assign(new_var)
 
