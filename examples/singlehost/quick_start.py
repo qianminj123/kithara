@@ -89,8 +89,8 @@ def run_workload():
     )
 
     # Create optimizer
-    optimizer = keras.optimizers.AdamW(
-        learning_rate=config["learning_rate"], weight_decay=0.01
+    optimizer = keras.optimizers.SGD(
+        learning_rate=config["learning_rate"],
     )
 
     # Create data loaders
@@ -103,6 +103,14 @@ def run_workload():
         per_device_batch_size=config["per_device_batch_size"],
     )
 
+    # Intialize the checkpoint with both the model and the optimizer
+    checkpointer = Checkpointer(
+        "gs://qianminj-bucket/ckpt04130930",
+        model=model,
+        save_interval_steps=2,
+        optimizer=optimizer,
+    )
+
     # Initialize trainer
     trainer = Trainer(
         model=model,
@@ -113,12 +121,15 @@ def run_workload():
         eval_steps_interval=config["eval_steps_interval"],
         max_eval_samples=config["max_eval_samples"],
         log_steps_interval=config["log_steps_interval"],
+        checkpointer=checkpointer,
     )
 
     # Start training
     trainer.train()
     
     print("Finished training. Prompting model...")
+
+    checkpointer.load()
 
     # Test after tuning
     pred = model.generate(
